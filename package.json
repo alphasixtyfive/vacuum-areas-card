@@ -1,0 +1,13 @@
+{
+  "name": "vacuum-areas-card",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Home Assistant card for mapped vacuum rooms and live maps",
+  "scripts": {
+    "test": "node --check vacuum-areas-card.js && node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
