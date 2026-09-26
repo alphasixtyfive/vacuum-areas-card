@@ -1,5 +1,7 @@
 # Vacuum Areas Card
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=alphasixtyfive&repository=vacuum-areas-card&category=plugin)
+
 A Home Assistant card for choosing mapped rooms and sending a vacuum to clean them. It puts the live map beside the room list on a wide screen and above it on a phone. The map supports pinch zoom and panning; room selection happens in the buttons below or beside it.
 
 The card reads the vacuum's existing [area mapping](https://www.home-assistant.io/integrations/vacuum/#mapping-your-vacuum-areas-to-home-assistant-areas). Room names and icons come from Home Assistant areas. It does not need a second list of room IDs in the dashboard.
@@ -12,9 +14,9 @@ The card reads the vacuum's existing [area mapping](https://www.home-assistant.i
 
 ## Install
 
-Copy `vacuum-areas-card.js` to `/config/www/`. Add `/local/vacuum-areas-card.js` as a **JavaScript module** in **Settings → Dashboards → Resources**, then refresh the dashboard.
+Use the HACS button above. If the repository is not listed yet, add `https://github.com/alphasixtyfive/vacuum-areas-card` in **HACS → Custom repositories**, choose **Dashboard**, and install it. Refresh Home Assistant after installation.
 
-Once this repository is published, it can also be added to HACS as a custom **Dashboard** repository. HACS will install the same JavaScript file.
+For a manual install, copy `vacuum-areas-card.js` to `/config/www/`. Add `/local/vacuum-areas-card.js` as a **JavaScript module** in **Settings → Dashboards → Resources**, then refresh the dashboard.
 
 ## Configure
 
@@ -51,7 +53,7 @@ On touch screens, pinch to zoom the map and drag it while zoomed. Double tap res
 
 ## Development
 
-The root JavaScript file is the maintained source and the HACS download. No build step or runtime dependency is needed. Run `npm test` to check its syntax and room/action behavior. Try layout changes in a Home Assistant dashboard at phone and tablet widths before publishing.
+The maintained source is in `src/`. Run `npm install` and `npm run build` to generate the root `vacuum-areas-card.js` that HACS downloads. There are no runtime dependencies. `npm test` checks the room/action behavior and that the generated file matches the source. Try layout changes in a Home Assistant dashboard at phone and tablet widths before publishing.
 
 ## License
 

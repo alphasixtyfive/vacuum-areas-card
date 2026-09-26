@@ -1,0 +1,440 @@
+:host {
+  display: block;
+  min-width: 0;
+  width: calc(100% - 32px);
+  margin: 16px auto;
+  container-type: inline-size;
+}
+[hidden] {
+  display: none !important;
+}
+ha-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: calc(100dvh - 88px);
+  overflow: hidden;
+  border: 1px solid var(--divider-color);
+  border-radius: 18px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+  border-bottom: 1px solid var(--divider-color);
+}
+.tab {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+}
+.tab[aria-selected="true"] {
+  color: var(--primary-text-color);
+  border-bottom-color: var(--primary-color);
+}
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 38%, 440px);
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+.map {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  background: var(--card-background-color);
+}
+.map-viewer {
+  --base-scale: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--primary-background-color);
+  touch-action: pan-y;
+}
+.map-viewer:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+}
+.map-viewer.zoomed {
+  touch-action: none;
+  cursor: grab;
+}
+.map-viewer.zoomed:active {
+  cursor: grabbing;
+}
+.map img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.map-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--secondary-text-color);
+}
+.panel {
+  min-width: 0;
+  padding: 24px;
+  border-left: 1px solid var(--divider-color);
+  display: flex;
+  flex-direction: column;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.status ha-icon {
+  color: var(--primary-color);
+  --mdc-icon-size: 24px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 14%,
+    var(--card-background-color)
+  );
+}
+.status-copy {
+  min-width: 0;
+  flex: 1;
+}
+.status strong {
+  display: block;
+  font-size: 18px;
+  line-height: 24px;
+}
+.status span {
+  color: var(--secondary-text-color);
+  line-height: 22px;
+}
+.maintenance {
+  min-width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid var(--warning-color, #ff9800);
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--warning-color, #ff9800) 12%,
+    var(--card-background-color)
+  );
+  color: var(--warning-color, #ff9800);
+}
+.maintenance ha-icon {
+  width: auto;
+  height: auto;
+  flex: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  --mdc-icon-size: 20px;
+}
+.maintenance span {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.rooms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.rooms-head strong {
+  font-size: 16px;
+}
+.selection-toggle {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--divider-color);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--primary-text-color);
+  padding: 0 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.selection-toggle ha-icon {
+  --mdc-icon-size: 17px;
+}
+.selection-toggle:hover:not(:disabled),
+.details:hover {
+  background: color-mix(
+    in srgb,
+    var(--primary-text-color) 5%,
+    var(--card-background-color)
+  );
+}
+.rooms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.room {
+  position: relative;
+  min-width: 0;
+  height: 112px;
+  box-sizing: border-box;
+  border: 1px solid var(--divider-color);
+  border-radius: 14px;
+  padding: 12px;
+  background: color-mix(
+    in srgb,
+    var(--primary-text-color) 3%,
+    var(--card-background-color)
+  );
+  color: var(--primary-text-color);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+.room:hover {
+  background: color-mix(
+    in srgb,
+    var(--primary-text-color) 5%,
+    var(--card-background-color)
+  );
+}
+.room[aria-pressed="true"] {
+  border-color: var(--primary-color);
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 15%,
+    var(--card-background-color)
+  );
+}
+.room-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--secondary-background-color);
+  color: var(--secondary-text-color);
+}
+.room-icon ha-icon {
+  --mdc-icon-size: 20px;
+}
+.room[aria-pressed="true"] .room-icon {
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 20%,
+    var(--card-background-color)
+  );
+  color: var(--primary-color);
+}
+.room-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+.room-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: var(--primary-color);
+  --mdc-icon-size: 18px;
+}
+.room[aria-pressed="false"] .room-check {
+  display: none;
+}
+.hint {
+  color: var(--secondary-text-color);
+  line-height: 22px;
+}
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.actions ha-icon {
+  --mdc-icon-size: 18px;
+}
+.details {
+  border: 1px solid var(--divider-color);
+  color: var(--primary-text-color);
+  background: transparent;
+}
+.start {
+  border: 0;
+  background: var(--primary-color);
+  color: var(--text-primary-color, white);
+  font-weight: 600;
+}
+.feedback {
+  min-height: 22px;
+  margin-top: 8px;
+  color: var(--secondary-text-color);
+  font-size: 13px;
+}
+.feedback:empty {
+  display: none;
+}
+.feedback.error {
+  color: var(--error-color);
+}
+@container (max-width: 720px) {
+  ha-card {
+    height: auto;
+  }
+  .body {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    min-height: auto;
+  }
+  .map {
+    height: clamp(280px, 40dvh, 360px);
+  }
+  .map-viewer {
+    --base-scale: 1.2;
+  }
+  .panel {
+    border-left: 0;
+    border-top: 1px solid var(--divider-color);
+    padding: 16px;
+  }
+  .status {
+    margin-bottom: 16px;
+  }
+  .rooms-head {
+    margin-bottom: 8px;
+  }
+  .rooms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .room {
+    height: 64px;
+    padding: 8px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .room-icon {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+  .room-icon ha-icon {
+    --mdc-icon-size: 18px;
+  }
+  .room-name {
+    line-height: 16px;
+  }
+  .room-check {
+    top: 5px;
+    left: 29px;
+    right: auto;
+    --mdc-icon-size: 14px;
+  }
+  .actions {
+    padding-top: 16px;
+  }
+}
+@container (max-width: 340px) {
+  .rooms {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-height: 700px) {
+  @container (min-width: 721px) {
+    .panel {
+      padding: 16px;
+    }
+    .status {
+      margin-bottom: 12px;
+    }
+    .rooms-head {
+      margin-bottom: 8px;
+    }
+    .room {
+      height: 80px;
+      padding: 8px;
+    }
+    .room-icon {
+      width: 28px;
+      height: 28px;
+    }
+    .room-icon ha-icon {
+      --mdc-icon-size: 18px;
+    }
+    .room-name {
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .actions {
+      padding-top: 12px;
+    }
+  }
+}
+@container (min-width: 721px) {
+  .map-viewer {
+    --base-scale: 1.1;
+  }
+}
+@container (min-width: 1700px) {
+  .map-viewer {
+    --base-scale: 1.3;
+  }
+}

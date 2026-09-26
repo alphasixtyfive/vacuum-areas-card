@@ -3,11 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "description": "A Home Assistant card for mapped vacuum rooms and live maps",
+  "type": "module",
   "scripts": {
-    "test": "node --check vacuum-areas-card.js && node --test tests/*.test.mjs"
+    "build": "node scripts/build.mjs",
+    "check-build": "node scripts/build.mjs --check",
+    "check-format": "prettier --check src scripts tests",
+    "test": "node --test tests/*.test.mjs && npm run check-build && npm run check-format",
+    "format": "prettier --write src scripts tests"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "prettier": "^3.6.0"
   },
   "license": "MIT"
 }

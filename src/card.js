@@ -1,0 +1,587 @@
+import styles from "./styles.css";
+
+export class VacuumAreasCard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._index = 0;
+    this._selected = new Set();
+    this._metadata = null;
+    this._roomsError = false;
+    this._roomKey = null;
+    this._request = 0;
+    this._loading = false;
+    this._busy = false;
+    this.shadowRoot.innerHTML = `
+        <style>${styles}</style>
+        <ha-card>
+          <div class="tabs" role="tablist" aria-label="Vacuums"></div>
+          <div class="body" id="vacuum-panel" role="tabpanel">
+            <div class="map">
+              <div class="map-viewer" role="group" aria-label="Vacuum map. Pinch to zoom." tabindex="0">
+                <img alt="" hidden>
+                <span class="map-empty">Map unavailable</span>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="status">
+                <ha-icon icon="mdi:robot-vacuum"></ha-icon>
+                <div class="status-copy"><strong></strong><span></span></div>
+                <button class="maintenance" type="button" hidden>
+                  <ha-icon icon="mdi:robot-vacuum-alert" aria-hidden="true"></ha-icon>
+                  <span></span>
+                </button>
+              </div>
+              <div class="rooms-head">
+                <strong>Rooms</strong>
+                <button class="selection-toggle" type="button">
+                  <ha-icon icon="mdi:select-all" aria-hidden="true"></ha-icon>
+                  <span>Select all</span>
+                </button>
+              </div>
+              <div class="rooms"></div>
+              <div class="actions">
+                <button class="details" type="button">
+                  <ha-icon icon="mdi:tune-variant" aria-hidden="true"></ha-icon>
+                  <span>Controls</span>
+                </button>
+                <button class="start" type="button">
+                  <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
+                  <span>Clean rooms</span>
+                </button>
+              </div>
+              <div class="feedback" role="status" aria-live="polite"></div>
+            </div>
+          </div>
+        </ha-card>`;
+    this._tabs = this.shadowRoot.querySelector(".tabs");
+    this._body = this.shadowRoot.querySelector(".body");
+    this._mapViewer = this.shadowRoot.querySelector(".map-viewer");
+    this._map = this.shadowRoot.querySelector(".map img");
+    this._mapEmpty = this.shadowRoot.querySelector(".map-empty");
+    this._map.addEventListener("error", () => {
+      this._failedMapSrc = this._map.getAttribute("src");
+      this._map.hidden = true;
+      this._mapEmpty.hidden = false;
+    });
+    this._zoom = 1;
+    this._pan = { x: 0, y: 0 };
+    this._pointers = new Map();
+    this._onResize = () => this._applyMapTransform();
+    this._statusName = this.shadowRoot.querySelector(".status strong");
+    this._statusDetail = this.shadowRoot.querySelector(".status span");
+    this._maintenance = this.shadowRoot.querySelector(".maintenance");
+    this._maintenanceCount = this._maintenance.querySelector("span");
+    this._rooms = this.shadowRoot.querySelector(".rooms");
+    this._selectionToggle = this.shadowRoot.querySelector(".selection-toggle");
+    this._selectionIcon = this._selectionToggle.querySelector("ha-icon");
+    this._selectionLabel = this._selectionToggle.querySelector("span");
+    this._start = this.shadowRoot.querySelector(".start");
+    this._startLabel = this._start.querySelector("span");
+    this._feedback = this.shadowRoot.querySelector(".feedback");
+    this._maintenance.addEventListener("click", () => {
+      const path = this._config.maintenance?.navigation_path;
+      if (!path || window.location.pathname === path) return;
+      const from =
+        window.location.pathname +
+        window.location.search +
+        window.location.hash;
+      window.history.pushState({ from }, "", path);
+      window.dispatchEvent(
+        new CustomEvent("location-changed", {
+          bubbles: true,
+          composed: true,
+          detail: { replace: false },
+        }),
+      );
+    });
+    this._mapViewer.addEventListener("pointerdown", (event) =>
+      this._pointerDown(event),
+    );
+    this._mapViewer.addEventListener("pointermove", (event) =>
+      this._pointerMove(event),
+    );
+    this._mapViewer.addEventListener("pointerup", (event) =>
+      this._pointerUp(event),
+    );
+    this._mapViewer.addEventListener("pointercancel", (event) =>
+      this._pointerUp(event),
+    );
+    this._mapViewer.addEventListener("dblclick", () => this._resetMap());
+    this._mapViewer.addEventListener(
+      "wheel",
+      (event) => {
+        if (!event.ctrlKey || !this._map.getAttribute("src")) return;
+        event.preventDefault();
+        this._zoomAt(
+          event.clientX,
+          event.clientY,
+          Math.exp(-event.deltaY / 300),
+        );
+      },
+      { passive: false },
+    );
+    this._mapViewer.addEventListener("keydown", (event) => {
+      if (event.key === "0") this._resetMap();
+      else if (event.key === "+" || event.key === "=")
+        this._zoomAt(null, null, 1.35);
+      else if (event.key === "-") this._zoomAt(null, null, 1 / 1.35);
+      else return;
+      event.preventDefault();
+    });
+    this._selectionToggle.addEventListener("click", () => {
+      const rooms = this._metadata?.[this._index] || [];
+      if (this._selected.size) this._selected.clear();
+      else this._selected = new Set(rooms.map((room) => room.id));
+      this._setFeedback("");
+      this._updateSelection();
+    });
+    this._start.addEventListener("click", () => this._clean());
+    this.shadowRoot.querySelector(".details").addEventListener("click", () => {
+      this.dispatchEvent(
+        new CustomEvent("hass-more-info", {
+          bubbles: true,
+          composed: true,
+          detail: { entityId: this._config.vacuums[this._index].entity },
+        }),
+      );
+    });
+  }
+
+  setConfig(config) {
+    const validVacuum = (item) =>
+      item &&
+      typeof item.entity === "string" &&
+      item.entity.startsWith("vacuum.") &&
+      typeof item.map === "string" &&
+      item.map.startsWith("image.") &&
+      (item.battery === undefined || typeof item.battery === "string") &&
+      (item.name === undefined || typeof item.name === "string");
+    if (
+      !Array.isArray(config?.vacuums) ||
+      !config.vacuums.length ||
+      !config.vacuums.every(validVacuum)
+    ) {
+      throw new Error("vacuum-areas-card needs vacuums with entity and map.");
+    }
+    if (
+      config.maintenance &&
+      (typeof config.maintenance.entity !== "string" ||
+        typeof config.maintenance.navigation_path !== "string" ||
+        !/^\/(?!\/)/.test(config.maintenance.navigation_path))
+    ) {
+      throw new Error("maintenance needs an entity and local navigation_path.");
+    }
+    this._config = config;
+    this._index = 0;
+    this._selected.clear();
+    this._resetMap();
+    this._metadata = null;
+    this._roomsError = false;
+    this._roomKey = null;
+    this._request++;
+    this._loading = false;
+    this._tabs.replaceChildren();
+    config.vacuums.forEach((item, index) => {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "tab";
+      tab.setAttribute("role", "tab");
+      tab.id = `vacuum-tab-${index}`;
+      tab.setAttribute("aria-controls", "vacuum-panel");
+      tab.textContent = item.name || item.entity;
+      tab.addEventListener("click", () => this._selectVacuum(index));
+      tab.addEventListener("keydown", (event) => {
+        const count = this._config.vacuums.length;
+        const next =
+          event.key === "ArrowRight"
+            ? (index + 1) % count
+            : event.key === "ArrowLeft"
+              ? (index - 1 + count) % count
+              : event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? count - 1
+                  : null;
+        if (next === null) return;
+        event.preventDefault();
+        this._selectVacuum(next);
+        this._tabs.children[next].focus();
+      });
+      this._tabs.append(tab);
+    });
+    this._render();
+    this._loadRooms();
+  }
+
+  set hass(hass) {
+    if (this._hass?.connection !== hass?.connection) {
+      this._metadata = null;
+      this._roomsError = false;
+      this._roomKey = null;
+      this._request++;
+      this._loading = false;
+    }
+    this._hass = hass;
+    this._render();
+    this._loadRooms();
+  }
+
+  connectedCallback() {
+    window.addEventListener("resize", this._onResize);
+    this._applyMapTransform();
+  }
+  disconnectedCallback() {
+    window.removeEventListener("resize", this._onResize);
+  }
+
+  getCardSize() {
+    return 8;
+  }
+  getGridOptions() {
+    return { columns: "full" };
+  }
+
+  _selectVacuum(index) {
+    if (this._busy || index === this._index) return;
+    this._index = index;
+    this._selected.clear();
+    this._resetMap();
+    this._setFeedback("");
+    this._render();
+  }
+
+  async _loadRooms() {
+    if (!this._config || !this._hass?.callWS || this._metadata || this._loading)
+      return;
+    const request = ++this._request;
+    this._loading = true;
+    try {
+      const [areas, ...entries] = await Promise.all([
+        this._hass.callWS({ type: "config/area_registry/list" }),
+        ...this._config.vacuums.map((item) =>
+          this._hass.callWS({
+            type: "config/entity_registry/get",
+            entity_id: item.entity,
+          }),
+        ),
+      ]);
+      if (request !== this._request) return;
+      const names = new Map(
+        areas.map((area) => [
+          area.area_id,
+          { name: area.name, icon: area.icon || "mdi:home-outline" },
+        ]),
+      );
+      this._metadata = entries.map((entry) =>
+        Object.keys(entry.options?.vacuum?.area_mapping || {})
+          .filter((id) => names.has(id))
+          .map((id) => ({ id, ...names.get(id) }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      this._roomsError = false;
+      this._setFeedback("");
+    } catch (_) {
+      if (request === this._request) {
+        this._roomsError = true;
+        this._setFeedback("Rooms unavailable. Check the robot controls.", true);
+      }
+    } finally {
+      if (request === this._request) {
+        this._loading = false;
+        this._renderRooms();
+      }
+    }
+  }
+
+  _label(item) {
+    return (
+      item.name ||
+      this._hass?.states?.[item.entity]?.attributes?.friendly_name ||
+      item.entity
+    );
+  }
+
+  _render() {
+    if (!this._config) return;
+    const item = this._config.vacuums[this._index];
+    [...this._tabs.children].forEach((tab, index) => {
+      tab.setAttribute("aria-selected", String(index === this._index));
+      tab.tabIndex = index === this._index ? 0 : -1;
+      tab.textContent = this._label(this._config.vacuums[index]);
+    });
+    this._body.setAttribute("aria-labelledby", `vacuum-tab-${this._index}`);
+    const state = this._hass?.states?.[item.entity];
+    const battery = this._hass?.states?.[item.battery]?.state;
+    const detail =
+      state?.state && !["unknown", "unavailable"].includes(state.state)
+        ? state.state
+            .replaceAll("_", " ")
+            .replace(/^./, (char) => char.toUpperCase())
+        : "Unavailable";
+    this._statusName.textContent = detail;
+    this._statusDetail.textContent = /^\d+(\.\d+)?$/.test(battery || "")
+      ? `${Math.round(Number(battery))}% battery`
+      : item.battery
+        ? "Battery unavailable"
+        : "";
+    const upkeep = this._config.maintenance;
+    const upkeepCount = Number(this._hass?.states?.[upkeep?.entity]?.state);
+    this._maintenance.hidden =
+      !upkeep || !Number.isFinite(upkeepCount) || upkeepCount <= 0;
+    if (!this._maintenance.hidden) {
+      this._maintenanceCount.textContent = String(upkeepCount);
+      this._maintenance.setAttribute(
+        "aria-label",
+        `${upkeepCount} vacuum upkeep ${upkeepCount === 1 ? "item" : "items"}`,
+      );
+      this._maintenance.title = "Vacuum upkeep";
+    }
+    const map = this._hass?.states?.[item.map];
+    const picture = map?.attributes?.entity_picture;
+    const src = picture
+      ? picture +
+        (picture.includes("?") ? "&" : "?") +
+        "state=" +
+        encodeURIComponent(map.state)
+      : "";
+    if (src && this._map.getAttribute("src") !== src) this._map.src = src;
+    if (!src) this._map.removeAttribute("src");
+    const hasMap = !!src && src !== this._failedMapSrc;
+    this._map.hidden = !hasMap;
+    this._mapEmpty.hidden = hasMap;
+    this._mapViewer.tabIndex = hasMap ? 0 : -1;
+    this._mapViewer.setAttribute(
+      "aria-label",
+      `${this._label(item)} map. Pinch to zoom; double tap to reset.`,
+    );
+    this._renderRooms();
+  }
+
+  _point(x, y) {
+    const rect = this._mapViewer.getBoundingClientRect();
+    return {
+      x: x - rect.left - rect.width / 2,
+      y: y - rect.top - rect.height / 2,
+    };
+  }
+
+  _startPinch() {
+    const [a, b] = [...this._pointers.values()];
+    const first = this._point(a.x, a.y);
+    const second = this._point(b.x, b.y);
+    this._pinch = {
+      distance: Math.hypot(first.x - second.x, first.y - second.y),
+      zoom: this._zoom,
+      pan: { ...this._pan },
+      center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
+    };
+  }
+
+  _pointerDown(event) {
+    if (
+      !this._map.getAttribute("src") ||
+      (event.pointerType === "mouse" && event.button !== 0)
+    )
+      return;
+    this._mapViewer.setPointerCapture(event.pointerId);
+    this._pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (this._pointers.size === 2) this._startPinch();
+    else
+      this._drag = {
+        x: event.clientX,
+        y: event.clientY,
+        pan: { ...this._pan },
+      };
+  }
+
+  _pointerMove(event) {
+    if (!this._pointers.has(event.pointerId)) return;
+    this._pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (this._pointers.size === 2 && this._pinch?.distance) {
+      const [a, b] = [...this._pointers.values()];
+      const first = this._point(a.x, a.y);
+      const second = this._point(b.x, b.y);
+      const center = {
+        x: (first.x + second.x) / 2,
+        y: (first.y + second.y) / 2,
+      };
+      this._zoom = Math.max(
+        1,
+        Math.min(
+          3,
+          (this._pinch.zoom *
+            Math.hypot(first.x - second.x, first.y - second.y)) /
+            this._pinch.distance,
+        ),
+      );
+      const ratio = this._zoom / this._pinch.zoom;
+      this._pan = {
+        x: center.x + (this._pinch.pan.x - this._pinch.center.x) * ratio,
+        y: center.y + (this._pinch.pan.y - this._pinch.center.y) * ratio,
+      };
+      this._applyMapTransform();
+    } else if (this._pointers.size === 1 && this._zoom > 1) {
+      this._pan = {
+        x: this._drag.pan.x + event.clientX - this._drag.x,
+        y: this._drag.pan.y + event.clientY - this._drag.y,
+      };
+      this._applyMapTransform();
+    }
+  }
+
+  _pointerUp(event) {
+    this._pointers.delete(event.pointerId);
+    this._pinch = null;
+    const remaining = [...this._pointers.values()][0];
+    if (remaining) this._drag = { ...remaining, pan: { ...this._pan } };
+  }
+
+  _zoomAt(clientX, clientY, factor) {
+    const point =
+      clientX === null ? { x: 0, y: 0 } : this._point(clientX, clientY);
+    const previous = this._zoom;
+    this._zoom = Math.max(1, Math.min(3, this._zoom * factor));
+    const ratio = this._zoom / previous;
+    this._pan = {
+      x: point.x + (this._pan.x - point.x) * ratio,
+      y: point.y + (this._pan.y - point.y) * ratio,
+    };
+    this._applyMapTransform();
+  }
+
+  _resetMap() {
+    this._zoom = 1;
+    this._pan = { x: 0, y: 0 };
+    this._pointers.clear();
+    this._pinch = null;
+    this._applyMapTransform();
+  }
+
+  _applyMapTransform() {
+    const base =
+      Number.parseFloat(
+        getComputedStyle(this._mapViewer).getPropertyValue("--base-scale"),
+      ) || 1;
+    const scale = base * this._zoom;
+    if (this._zoom === 1) this._pan = { x: 0, y: 0 };
+    const maxX = Math.max(0, ((scale - 1) * this._mapViewer.clientWidth) / 2);
+    const maxY = Math.max(0, ((scale - 1) * this._mapViewer.clientHeight) / 2);
+    this._pan.x = Math.max(-maxX, Math.min(maxX, this._pan.x));
+    this._pan.y = Math.max(-maxY, Math.min(maxY, this._pan.y));
+    this._map.style.transform = `translate3d(${this._pan.x}px, ${this._pan.y}px, 0) scale(${scale})`;
+    this._mapViewer.classList.toggle("zoomed", this._zoom > 1.01);
+  }
+
+  _renderRooms() {
+    const rooms = this._metadata?.[this._index] || [];
+    const key = `${this._index}:${this._metadata ? "ready" : this._roomsError ? "error" : "loading"}`;
+    if (key !== this._roomKey) {
+      this._roomKey = key;
+      this._rooms.replaceChildren();
+      if (!rooms.length) {
+        const hint = document.createElement("span");
+        hint.className = "hint";
+        hint.textContent = this._roomsError
+          ? "Rooms unavailable"
+          : this._metadata
+            ? "No mapped rooms"
+            : "Loading rooms…";
+        this._rooms.append(hint);
+      }
+      for (const room of rooms) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "room";
+        button.dataset.areaId = room.id;
+        const icon = document.createElement("span");
+        icon.className = "room-icon";
+        const glyph = document.createElement("ha-icon");
+        glyph.icon = room.icon;
+        glyph.setAttribute("aria-hidden", "true");
+        icon.append(glyph);
+        const name = document.createElement("span");
+        name.className = "room-name";
+        name.textContent = room.name;
+        const check = document.createElement("ha-icon");
+        check.className = "room-check";
+        check.icon = "mdi:check-circle";
+        check.setAttribute("aria-hidden", "true");
+        button.append(icon, name, check);
+        button.addEventListener("click", () => {
+          if (this._selected.has(room.id)) this._selected.delete(room.id);
+          else this._selected.add(room.id);
+          this._setFeedback("");
+          this._updateSelection();
+        });
+        this._rooms.append(button);
+      }
+    }
+    this._updateSelection();
+  }
+
+  _updateSelection() {
+    for (const button of this._rooms.querySelectorAll("button.room")) {
+      button.setAttribute(
+        "aria-pressed",
+        String(this._selected.has(button.dataset.areaId)),
+      );
+      button.disabled = !!this._busy;
+    }
+    for (const tab of this._tabs.children) tab.disabled = !!this._busy;
+    const rooms = this._metadata?.[this._index] || [];
+    const state =
+      this._hass?.states?.[this._config.vacuums[this._index].entity]?.state;
+    this._selectionToggle.disabled = !rooms.length || this._busy;
+    this._selectionIcon.icon = this._selected.size
+      ? "mdi:close"
+      : "mdi:select-all";
+    this._selectionLabel.textContent = this._selected.size
+      ? "Clear selection"
+      : "Select all";
+    this._start.disabled =
+      !this._selected.size ||
+      !state ||
+      ["unknown", "unavailable"].includes(state) ||
+      this._busy;
+    this._startLabel.textContent = this._busy
+      ? "Starting…"
+      : this._selected.size
+        ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
+        : "Clean rooms";
+  }
+
+  async _clean() {
+    if (this._busy || !this._selected.size) return;
+    const index = this._index;
+    const vacuum = this._config.vacuums[this._index].entity;
+    const ids = [...this._selected];
+    this._busy = true;
+    this._renderRooms();
+    try {
+      await this._hass.callService(
+        "vacuum",
+        "clean_area",
+        { cleaning_area_id: ids },
+        { entity_id: vacuum },
+      );
+      if (this._index === index) this._selected.clear();
+      this._setFeedback(
+        `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.`,
+      );
+    } catch (_) {
+      this._setFeedback(
+        "Could not start cleaning. Check the robot controls.",
+        true,
+      );
+    } finally {
+      this._busy = false;
+      this._renderRooms();
+    }
+  }
+
+  _setFeedback(message, error = false) {
+    this._feedback.textContent = message;
+    this._feedback.classList.toggle("error", error);
+  }
+}
