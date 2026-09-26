@@ -5,6 +5,10 @@
   margin: 16px auto;
   container-type: inline-size;
 }
+:host([full-view]) {
+  width: 100%;
+  margin: 0;
+}
 [hidden] {
   display: none !important;
 }
@@ -16,6 +20,12 @@ ha-card {
   overflow: hidden;
   border: 1px solid var(--divider-color);
   border-radius: 18px;
+}
+:host([full-view]) ha-card {
+  height: calc(100dvh - var(--header-height, 56px));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 button {
   font: inherit;
@@ -67,6 +77,9 @@ button:focus-visible {
   overflow: hidden;
   background: var(--card-background-color);
 }
+:host([full-view]) .map {
+  padding: 0;
+}
 .map-viewer {
   --base-scale: 1;
   position: relative;
@@ -76,6 +89,9 @@ button:focus-visible {
   overflow: hidden;
   background: var(--primary-background-color);
   touch-action: pan-y;
+}
+:host([full-view]) .map-viewer {
+  border-radius: 0;
 }
 .map-viewer:focus-visible {
   outline: 2px solid var(--primary-color);
@@ -334,7 +350,8 @@ button:focus-visible {
   color: var(--error-color);
 }
 @container (max-width: 720px) {
-  ha-card {
+  ha-card,
+  :host([full-view]) ha-card {
     height: auto;
   }
   .body {

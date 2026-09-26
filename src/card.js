@@ -172,7 +172,14 @@ export class VacuumAreasCard extends HTMLElement {
     ) {
       throw new Error("maintenance needs an entity and local navigation_path.");
     }
+    if (
+      config.full_view !== undefined &&
+      typeof config.full_view !== "boolean"
+    ) {
+      throw new Error("full_view must be a boolean.");
+    }
     this._config = config;
+    this.toggleAttribute("full-view", config.full_view === true);
     this._index = 0;
     this._selected.clear();
     this._resetMap();

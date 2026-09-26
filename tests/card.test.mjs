@@ -24,6 +24,9 @@ vm.runInNewContext(
 function cardWithoutDom() {
   const card = Object.create(Card.prototype);
   card._selected = new Set();
+  card.toggleAttribute = (name, force) => {
+    card.fullViewAttribute = name === "full-view" && force;
+  };
   card._tabs = { replaceChildren() {}, append() {} };
   card._resetMap = () => {};
   card._render = () => {};
@@ -53,6 +56,20 @@ test("configuration needs a vacuum and map, with optional extras", () => {
   );
   card.setConfig({ vacuums: [{ entity: "vacuum.robot", map: "image.map" }] });
   assert.equal(card._config.vacuums[0].entity, "vacuum.robot");
+  assert.equal(card.fullViewAttribute, false);
+  card.setConfig({
+    full_view: true,
+    vacuums: [{ entity: "vacuum.robot", map: "image.map" }],
+  });
+  assert.equal(card.fullViewAttribute, true);
+  card.setConfig({ vacuums: [{ entity: "vacuum.robot", map: "image.map" }] });
+  assert.equal(card.fullViewAttribute, false);
+  assert.throws(() =>
+    card.setConfig({
+      full_view: "true",
+      vacuums: [{ entity: "vacuum.robot", map: "image.map" }],
+    }),
+  );
 });
 
 test("rooms come from the vacuum mapping and Home Assistant areas", async () => {
