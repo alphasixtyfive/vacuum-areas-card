@@ -37,7 +37,7 @@ vacuums:
 
 `vacuums` accepts one or more entries. Each needs a vacuum `entity` and an image `map`. `name` replaces the tab label and `battery` adds a charge percentage; both are optional. A panel view gives the map the most room, but the card also adapts to narrower containers.
 
-For a dedicated full-page view, add `full_view: true` beside `type`. The card fills the panel edge to edge with square outer corners and a map flush to its side. Omit it when placing the card among other cards; the ordinary card keeps its themed corners and map padding.
+For a dedicated full-page view, add `full_view: true` beside `type`. The card fills the panel edge to edge, with a map flush to its side and outer corners set by the Home Assistant theme. Omit it when placing the card among other cards; the embedded card and its map have square corners and map padding. Room and action buttons still follow the theme.
 
 ```yaml
 type: custom:vacuum-areas-card

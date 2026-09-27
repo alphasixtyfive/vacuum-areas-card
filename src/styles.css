@@ -21,12 +21,13 @@ ha-card {
   flex-direction: column;
   box-sizing: border-box;
   height: calc(100dvh - var(--header-height, 56px) - 32px);
+  border-radius: 0;
   overflow: hidden;
 }
 :host([full-view]) ha-card {
   height: calc(100dvh - var(--header-height, 56px));
   border: 0;
-  border-radius: 0;
+  border-radius: var(--ha-card-border-radius, 12px);
   box-shadow: none;
 }
 button {
@@ -87,13 +88,9 @@ button:focus-visible {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: var(--ha-border-radius-lg, 12px);
   overflow: hidden;
   background: var(--primary-background-color);
   touch-action: pan-y;
-}
-:host([full-view]) .map-viewer {
-  border-radius: 0;
 }
 .map-viewer:focus-visible {
   outline: 2px solid var(--primary-color);
