@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3 — 27 September 2026
 
 - Keep full-page cards inset with theme-rounded corners, and apply the theme's surface and radius tokens to room controls.
 

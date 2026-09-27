@@ -1,6 +1,6 @@
 {
   "name": "vacuum-areas-card",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "A Home Assistant card for mapped vacuum rooms and live maps",
   "type": "module",
