@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 — 27 September 2026
+
+- Restore edge-to-edge, square full-page panels while keeping theme-rounded ordinary cards and room controls.
+
 ## 0.1.3 — 27 September 2026
 
 - Keep full-page cards inset with theme-rounded corners, and apply the theme's surface and radius tokens to room controls.
