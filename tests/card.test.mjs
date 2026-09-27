@@ -215,7 +215,7 @@ test("the primary control follows the vacuum state", () => {
   const card = cardWithControls("docked");
   card._updateSelection();
   assert.equal(card._primaryAction, "start");
-  assert.equal(card._startLabel.textContent, "Clean all");
+  assert.equal(card._startLabel.textContent, "Clean all rooms");
   assert.equal(card._start.disabled, false);
   assert.equal(card._dock.hidden, true);
 

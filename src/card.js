@@ -39,6 +39,9 @@ export class VacuumAreasCard extends HTMLElement {
                   <ha-icon icon="mdi:robot-vacuum-alert" aria-hidden="true"></ha-icon>
                   <span></span>
                 </button>
+                <button class="details" type="button" aria-label="Vacuum details" title="Vacuum details">
+                  <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
+                </button>
               </div>
               <div class="rooms-head">
                 <strong>Rooms</strong>
@@ -51,14 +54,11 @@ export class VacuumAreasCard extends HTMLElement {
               <div class="actions">
                 <button class="start" type="button">
                   <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
-                  <span>Clean all</span>
+                  <span>Clean all rooms</span>
                 </button>
                 <button class="dock" type="button">
                   <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
                   <span>Dock</span>
-                </button>
-                <button class="details" type="button" aria-label="Vacuum details" title="Vacuum details">
-                  <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
                 </button>
               </div>
               <div class="feedback" role="status" aria-live="polite"></div>
@@ -586,7 +586,7 @@ export class VacuumAreasCard extends HTMLElement {
     this._startIcon.icon = action === "pause" ? "mdi:pause" : "mdi:play";
     let label = this._selected.size
       ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
-      : "Clean all";
+      : "Clean all rooms";
     if (state === "cleaning") label = "Pause cleaning";
     if (state === "paused") label = "Resume cleaning";
     if (state === "returning") label = "Returning to dock";

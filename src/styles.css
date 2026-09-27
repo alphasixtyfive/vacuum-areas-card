@@ -129,7 +129,7 @@ button:focus-visible {
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 .status ha-icon {
   color: var(--primary-color);
@@ -183,12 +183,31 @@ button:focus-visible {
   font-size: 13px;
   font-weight: 600;
 }
+.details {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ha-border-radius-md, 12px);
+  background: transparent;
+  color: var(--secondary-text-color);
+}
+.details ha-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: inherit;
+  --mdc-icon-size: 20px;
+}
 .rooms-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 .rooms-head strong {
   font-size: 15px;
@@ -221,22 +240,22 @@ button:focus-visible {
 .rooms {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 10px;
 }
 .room {
   min-width: 0;
-  min-height: 52px;
+  min-height: 60px;
   box-sizing: border-box;
   border: 1px solid var(--divider-color);
   border-radius: var(--ha-border-radius-md, 12px);
-  padding: 6px 10px;
+  padding: 10px 12px;
   background: transparent;
   color: var(--primary-text-color);
   text-align: left;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .room:hover {
   background: var(
@@ -269,7 +288,7 @@ button:focus-visible {
 .room-name {
   min-width: 0;
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 18px;
   overflow-wrap: anywhere;
@@ -288,8 +307,8 @@ button:focus-visible {
 }
 .actions {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 24px;
 }
 .actions button {
   display: flex;
@@ -305,19 +324,31 @@ button:focus-visible {
 .actions ha-icon {
   --mdc-icon-size: 18px;
 }
-.dock,
-.details {
+.dock {
   border: 1px solid var(--divider-color);
   color: var(--primary-text-color);
   background: transparent;
   font-size: 13px;
 }
-.start {
+.actions .start {
   flex: 1;
-  border: 0;
-  background: var(--primary-color);
-  color: var(--text-primary-color, white);
+  justify-content: flex-start;
+  padding: 0 16px;
+  border: 1px solid var(--primary-color);
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 12%,
+    var(--card-background-color)
+  );
+  color: var(--primary-color);
   font-weight: 600;
+}
+.start:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 20%,
+    var(--card-background-color)
+  );
 }
 .start:disabled {
   opacity: 1;
@@ -327,10 +358,6 @@ button:focus-visible {
 }
 .dock {
   flex: 0 0 auto;
-}
-.details {
-  flex: 0 0 48px;
-  padding: 0;
 }
 .feedback {
   min-height: 22px;
