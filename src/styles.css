@@ -309,21 +309,52 @@ button:focus-visible {
   gap: 10px;
   margin-top: 24px;
 }
-.actions ha-button {
-  --ha-button-height: 48px;
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--ha-border-radius-pill, 9999px);
+  font-size: var(--ha-font-size-m, 14px);
+  font-weight: var(--ha-font-weight-medium, 500);
 }
 .actions ha-icon {
   --mdc-icon-size: 18px;
 }
 .actions .start {
   flex: 1;
+  border: 1px solid transparent;
+  background: var(--ha-color-fill-primary-normal-resting, var(--primary-color));
+  color: var(--ha-color-on-primary-normal, var(--text-primary-color, white));
 }
-.actions .start::part(base) {
-  width: 100%;
+.actions .start:hover:not(:disabled) {
+  background: var(--ha-color-fill-primary-normal-hover, var(--primary-color));
+}
+.actions .start:active:not(:disabled) {
+  background: var(--ha-color-fill-primary-normal-active, var(--primary-color));
+}
+.actions .start:disabled {
+  opacity: 1;
+  background: var(
+    --ha-color-fill-disabled-normal-resting,
+    var(--secondary-background-color)
+  );
+  color: var(--ha-color-on-disabled-normal, var(--secondary-text-color));
 }
 .actions .dock {
   flex: 0 0 auto;
+  border: 1px solid var(--ha-color-border-neutral-normal, var(--divider-color));
+  background: transparent;
+  color: var(--primary-text-color);
+}
+.actions .dock:hover:not(:disabled) {
+  background: var(
+    --ha-color-fill-neutral-quiet-hover,
+    var(--secondary-background-color)
+  );
 }
 .feedback {
   min-height: 22px;

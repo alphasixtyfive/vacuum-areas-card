@@ -1,8 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 — 27 September 2026
 
-- Show Pause and Resume on the main button as the vacuum state changes, with direct Clean all and Dock controls.
+- Show Clean all, Pause, or Resume on the main button according to the vacuum state, with a direct Dock control while the robot is away.
+- Improve room spacing and use Home Assistant theme colors for rooms and controls.
+- Keep the action buttons independent of Home Assistant's internal button component while retaining the theme-aligned appearance.
+
+## 0.1.1 — 26 September 2026
+
+- Add `full_view` for edge-to-edge dashboard panels.
 
 ## 0.1.0 — 26 September 2026
 
