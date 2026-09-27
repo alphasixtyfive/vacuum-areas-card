@@ -51,22 +51,15 @@ export class VacuumAreasCard extends HTMLElement {
               <div class="actions">
                 <button class="start" type="button">
                   <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
-                  <span>Clean rooms</span>
+                  <span>Clean all</span>
                 </button>
-                <div class="quick-controls">
-                  <button class="clean-all" type="button">
-                    <ha-icon icon="mdi:robot-vacuum" aria-hidden="true"></ha-icon>
-                    <span>Clean all</span>
-                  </button>
-                  <button class="dock" type="button">
-                    <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
-                    <span>Dock</span>
-                  </button>
-                  <button class="details" type="button">
-                    <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
-                    <span>More</span>
-                  </button>
-                </div>
+                <button class="dock" type="button">
+                  <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
+                  <span>Dock</span>
+                </button>
+                <button class="details" type="button" aria-label="Vacuum details" title="Vacuum details">
+                  <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
+                </button>
               </div>
               <div class="feedback" role="status" aria-live="polite"></div>
             </div>
@@ -97,7 +90,6 @@ export class VacuumAreasCard extends HTMLElement {
     this._start = this.shadowRoot.querySelector(".start");
     this._startIcon = this._start.querySelector("ha-icon");
     this._startLabel = this._start.querySelector("span");
-    this._cleanAll = this.shadowRoot.querySelector(".clean-all");
     this._dock = this.shadowRoot.querySelector(".dock");
     this._feedback = this.shadowRoot.querySelector(".feedback");
     this._maintenance.addEventListener("click", () => {
@@ -160,7 +152,6 @@ export class VacuumAreasCard extends HTMLElement {
     this._start.addEventListener("click", () =>
       this._perform(this._primaryAction),
     );
-    this._cleanAll.addEventListener("click", () => this._perform("start"));
     this._dock.addEventListener("click", () => this._perform("return_to_base"));
     this.shadowRoot.querySelector(".details").addEventListener("click", () => {
       this.dispatchEvent(
@@ -561,9 +552,9 @@ export class VacuumAreasCard extends HTMLElement {
     const action =
       state === "cleaning"
         ? "pause"
-        : state === "paused"
-          ? "start"
-          : "clean_area";
+        : ready && this._selected.size
+          ? "clean_area"
+          : "start";
     const feature =
       action === "pause"
         ? VACUUM_FEATURE.PAUSE
@@ -579,7 +570,8 @@ export class VacuumAreasCard extends HTMLElement {
     }
     for (const tab of this._tabs.children) tab.disabled = !!this._busy;
     const rooms = this._metadata?.[this._index] || [];
-    this._selectionToggle.disabled = !rooms.length || !ready || this._busy;
+    this._selectionToggle.hidden = !rooms.length || !ready;
+    this._selectionToggle.disabled = this._busy;
     this._selectionIcon.icon = this._selected.size
       ? "mdi:close"
       : "mdi:select-all";
@@ -590,22 +582,22 @@ export class VacuumAreasCard extends HTMLElement {
     this._start.disabled =
       this._busy ||
       !(features & feature) ||
-      (action === "clean_area" && (!ready || !this._selected.size));
+      !(ready || state === "cleaning" || state === "paused");
     this._startIcon.icon = action === "pause" ? "mdi:pause" : "mdi:play";
     let label = this._selected.size
       ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
-      : "Clean rooms";
+      : "Clean all";
     if (state === "cleaning") label = "Pause cleaning";
     if (state === "paused") label = "Resume cleaning";
     if (state === "returning") label = "Returning to dock";
+    if (state === "unknown" || state === "unavailable" || !state)
+      label = "Vacuum unavailable";
     this._startLabel.textContent = this._busy ? "Sending…" : label;
-    this._cleanAll.disabled =
-      !ready || !(features & VACUUM_FEATURE.START) || this._busy;
-    this._dock.disabled =
+    this._dock.hidden =
       !state ||
       ["docked", "returning", "unknown", "unavailable"].includes(state) ||
-      !(features & VACUUM_FEATURE.RETURN_HOME) ||
-      this._busy;
+      !(features & VACUUM_FEATURE.RETURN_HOME);
+    this._dock.disabled = this._busy;
   }
 
   async _perform(service) {

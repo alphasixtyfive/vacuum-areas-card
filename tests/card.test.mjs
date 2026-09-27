@@ -55,7 +55,6 @@ function cardWithControls(state, selected = []) {
   card._start = {};
   card._startIcon = {};
   card._startLabel = {};
-  card._cleanAll = {};
   card._dock = {};
   return card;
 }
@@ -213,22 +212,27 @@ test("a failed cleaning request leaves the selection available to retry", async 
 });
 
 test("the primary control follows the vacuum state", () => {
-  const card = cardWithControls("docked", ["kitchen"]);
+  const card = cardWithControls("docked");
+  card._updateSelection();
+  assert.equal(card._primaryAction, "start");
+  assert.equal(card._startLabel.textContent, "Clean all");
+  assert.equal(card._start.disabled, false);
+  assert.equal(card._dock.hidden, true);
+
+  card._selected.add("kitchen");
   card._updateSelection();
   assert.equal(card._primaryAction, "clean_area");
   assert.equal(card._startLabel.textContent, "Clean 1 room");
   assert.equal(card._start.disabled, false);
-  assert.equal(card._cleanAll.disabled, false);
-  assert.equal(card._dock.disabled, true);
 
   card._hass.states["vacuum.robot"].state = "cleaning";
   card._updateSelection();
   assert.equal(card._primaryAction, "pause");
   assert.equal(card._startLabel.textContent, "Pause cleaning");
   assert.equal(card._start.disabled, false);
-  assert.equal(card._cleanAll.disabled, true);
+  assert.equal(card._dock.hidden, false);
   assert.equal(card._dock.disabled, false);
-  assert.equal(card._selectionToggle.disabled, true);
+  assert.equal(card._selectionToggle.hidden, true);
 
   card._hass.states["vacuum.robot"].state = "paused";
   card._updateSelection();
@@ -240,16 +244,16 @@ test("the primary control follows the vacuum state", () => {
   card._updateSelection();
   assert.equal(card._startLabel.textContent, "Returning to dock");
   assert.equal(card._start.disabled, true);
-  assert.equal(card._dock.disabled, true);
+  assert.equal(card._dock.hidden, true);
 
   card._hass.states["vacuum.robot"].state = "cleaning";
   card._hass.states["vacuum.robot"].attributes.supported_features = 0;
   card._updateSelection();
   assert.equal(card._start.disabled, true);
-  assert.equal(card._dock.disabled, true);
+  assert.equal(card._dock.hidden, true);
 });
 
-test("quick controls use Home Assistant vacuum actions for the selected robot", async () => {
+test("vacuum controls use Home Assistant actions for the selected robot", async () => {
   const card = cardWithControls("paused");
   const calls = [];
   const feedback = [];

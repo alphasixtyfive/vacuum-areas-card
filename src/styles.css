@@ -119,7 +119,7 @@ button:focus-visible {
 }
 .panel {
   min-width: 0;
-  padding: 20px;
+  padding: 16px;
   border-left: 1px solid var(--divider-color);
   display: flex;
   flex-direction: column;
@@ -127,8 +127,9 @@ button:focus-visible {
 .status {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  min-height: 44px;
+  margin-bottom: 12px;
 }
 .status ha-icon {
   color: var(--primary-color);
@@ -187,25 +188,22 @@ button:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 .rooms-head strong {
-  font-size: 16px;
+  font-size: 15px;
 }
 .selection-toggle {
-  min-height: 44px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
   border: 0;
   border-radius: var(--ha-border-radius-md, 12px);
-  background: var(
-    --ha-color-fill-neutral-quiet-resting,
-    var(--secondary-background-color)
-  );
-  color: var(--primary-text-color);
-  padding: 0 10px;
+  background: transparent;
+  color: var(--primary-color);
+  padding: 0 4px;
   font-size: 13px;
   white-space: nowrap;
 }
@@ -213,7 +211,8 @@ button:focus-visible {
   --mdc-icon-size: 17px;
 }
 .selection-toggle:hover:not(:disabled),
-.quick-controls button:hover:not(:disabled) {
+.dock:hover:not(:disabled),
+.details:hover:not(:disabled) {
   background: var(
     --ha-color-fill-neutral-quiet-hover,
     var(--secondary-background-color)
@@ -222,20 +221,16 @@ button:focus-visible {
 .rooms {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 .room {
-  position: relative;
   min-width: 0;
-  min-height: 64px;
+  min-height: 52px;
   box-sizing: border-box;
-  border: 1px solid transparent;
+  border: 1px solid var(--divider-color);
   border-radius: var(--ha-border-radius-md, 12px);
-  padding: 8px 10px;
-  background: var(
-    --ha-color-fill-neutral-quiet-resting,
-    var(--secondary-background-color)
-  );
+  padding: 6px 10px;
+  background: transparent;
   color: var(--primary-text-color);
   text-align: left;
   display: flex;
@@ -260,36 +255,29 @@ button:focus-visible {
 .room-icon {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  border-radius: 50%;
-  background: var(--card-background-color);
-  color: var(--primary-color);
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  color: var(--secondary-text-color);
 }
 .room-icon ha-icon {
-  --mdc-icon-size: 20px;
+  --mdc-icon-size: 19px;
 }
 .room[aria-pressed="true"] .room-icon {
-  background: color-mix(
-    in srgb,
-    var(--primary-color) 18%,
-    var(--card-background-color)
-  );
   color: var(--primary-color);
 }
 .room-name {
-  font-size: 14px;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 17px;
+  line-height: 18px;
   overflow-wrap: anywhere;
 }
 .room-check {
-  position: absolute;
-  top: 4px;
-  left: 34px;
+  flex: 0 0 auto;
   color: var(--primary-color);
-  --mdc-icon-size: 18px;
+  --mdc-icon-size: 17px;
 }
 .room[aria-pressed="false"] .room-check {
   display: none;
@@ -299,15 +287,9 @@ button:focus-visible {
   line-height: 22px;
 }
 .actions {
-  display: grid;
+  display: flex;
   gap: 8px;
-  margin-top: 0;
-  padding-top: 20px;
-}
-.quick-controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  margin-top: 16px;
 }
 .actions button {
   display: flex;
@@ -317,28 +299,38 @@ button:focus-visible {
   min-width: 0;
   min-height: 48px;
   border-radius: var(--ha-border-radius-md, 12px);
-  padding: 0 8px;
+  padding: 0 12px;
   white-space: nowrap;
 }
 .actions ha-icon {
   --mdc-icon-size: 18px;
 }
-.quick-controls button {
-  border: 0;
+.dock,
+.details {
+  border: 1px solid var(--divider-color);
   color: var(--primary-text-color);
-  background: var(
-    --ha-color-fill-neutral-quiet-resting,
-    var(--secondary-background-color)
-  );
-  gap: 5px;
-  padding: 0 4px;
+  background: transparent;
   font-size: 13px;
 }
 .start {
+  flex: 1;
   border: 0;
   background: var(--primary-color);
   color: var(--text-primary-color, white);
   font-weight: 600;
+}
+.start:disabled {
+  opacity: 1;
+  border: 1px solid var(--divider-color);
+  background: transparent;
+  color: var(--secondary-text-color);
+}
+.dock {
+  flex: 0 0 auto;
+}
+.details {
+  flex: 0 0 48px;
+  padding: 0;
 }
 .feedback {
   min-height: 22px;
@@ -374,66 +366,10 @@ button:focus-visible {
     border-top: 1px solid var(--divider-color);
     padding: 16px;
   }
-  .status {
-    margin-bottom: 16px;
-  }
-  .rooms-head {
-    margin-bottom: 8px;
-  }
-  .rooms {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .room {
-    min-height: 60px;
-  }
-  .room-icon {
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
-  }
-  .room-icon ha-icon {
-    --mdc-icon-size: 18px;
-  }
-  .room-name {
-    line-height: 16px;
-  }
-  .room-check {
-    left: 30px;
-    --mdc-icon-size: 14px;
-  }
-  .actions {
-    padding-top: 16px;
-  }
 }
 @container (max-width: 340px) {
   .rooms {
     grid-template-columns: 1fr;
-  }
-}
-@media (max-height: 700px) {
-  @container (min-width: 721px) {
-    .panel {
-      padding: 16px;
-    }
-    .status {
-      margin-bottom: 12px;
-    }
-    .rooms-head {
-      margin-bottom: 8px;
-    }
-    .room {
-      min-height: 60px;
-    }
-    .room-icon {
-      width: 28px;
-      height: 28px;
-    }
-    .room-icon ha-icon {
-      --mdc-icon-size: 18px;
-    }
-    .actions {
-      padding-top: 12px;
-    }
   }
 }
 @container (min-width: 721px) {
