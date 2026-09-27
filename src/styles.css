@@ -4,10 +4,10 @@
   width: calc(100% - 32px);
   margin: 16px auto;
   container-type: inline-size;
-}
-:host([full-view]) {
-  width: 100%;
-  margin: 0;
+  --vacuum-card-background: var(
+    --ha-card-background,
+    var(--card-background-color)
+  );
 }
 [hidden] {
   display: none !important;
@@ -16,14 +16,11 @@ ha-card {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  height: calc(100dvh - 88px);
+  height: calc(100dvh - var(--header-height, 56px) - 32px);
   overflow: hidden;
 }
 :host([full-view]) ha-card {
-  height: calc(100dvh - var(--header-height, 56px));
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: var(--ha-border-radius-lg, 12px);
 }
 button {
   font: inherit;
@@ -73,7 +70,7 @@ button:focus-visible {
   min-width: 0;
   padding: 12px;
   overflow: hidden;
-  background: var(--card-background-color);
+  background: var(--vacuum-card-background);
 }
 :host([full-view]) .map {
   padding: 0;
@@ -83,7 +80,7 @@ button:focus-visible {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: var(--ha-border-radius-md, 12px);
+  border-radius: var(--ha-border-radius-lg, 12px);
   overflow: hidden;
   background: var(--primary-background-color);
   touch-action: pan-y;
@@ -161,11 +158,11 @@ button:focus-visible {
   justify-content: center;
   gap: 3px;
   border: 1px solid var(--warning-color, #ff9800);
-  border-radius: var(--ha-border-radius-md, 12px);
+  border-radius: var(--ha-border-radius-md, 8px);
   background: color-mix(
     in srgb,
     var(--warning-color, #ff9800) 12%,
-    var(--card-background-color)
+    var(--vacuum-card-background)
   );
   color: var(--warning-color, #ff9800);
 }
@@ -191,7 +188,7 @@ button:focus-visible {
   height: 40px;
   padding: 0;
   border: 0;
-  border-radius: var(--ha-border-radius-md, 12px);
+  border-radius: var(--ha-border-radius-pill, 9999px);
   background: transparent;
   color: var(--secondary-text-color);
 }
@@ -219,7 +216,7 @@ button:focus-visible {
   justify-content: center;
   gap: 5px;
   border: 0;
-  border-radius: var(--ha-border-radius-md, 12px);
+  border-radius: var(--ha-border-radius-pill, 9999px);
   background: transparent;
   color: var(--primary-color);
   padding: 0 4px;
@@ -246,7 +243,7 @@ button:focus-visible {
   min-height: 60px;
   box-sizing: border-box;
   border: 1px solid var(--divider-color);
-  border-radius: var(--ha-border-radius-md, 12px);
+  border-radius: var(--ha-border-radius-lg, 12px);
   padding: 10px 12px;
   background: transparent;
   color: var(--primary-text-color);
@@ -256,7 +253,7 @@ button:focus-visible {
   align-items: center;
   gap: 10px;
 }
-.room:hover {
+.room:hover:not(:disabled) {
   background: var(
     --ha-color-fill-neutral-quiet-hover,
     var(--secondary-background-color)
@@ -267,7 +264,7 @@ button:focus-visible {
   background: color-mix(
     in srgb,
     var(--primary-color) 12%,
-    var(--card-background-color)
+    var(--vacuum-card-background)
   );
 }
 .room-icon {
@@ -369,8 +366,7 @@ button:focus-visible {
   color: var(--error-color);
 }
 @container (max-width: 720px) {
-  ha-card,
-  :host([full-view]) ha-card {
+  ha-card {
     height: auto;
   }
   .body {

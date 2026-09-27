@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Keep full-page cards inset with theme-rounded corners, and apply the theme's surface and radius tokens to room controls.
+
 ## 0.1.2 — 27 September 2026
 
 - Show Clean all, Pause, or Resume on the main button according to the vacuum state, with a direct Dock control while the robot is away.

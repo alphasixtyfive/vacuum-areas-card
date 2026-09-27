@@ -37,7 +37,7 @@ vacuums:
 
 `vacuums` accepts one or more entries. Each needs a vacuum `entity` and an image `map`. `name` replaces the tab label and `battery` adds a charge percentage; both are optional. A panel view gives the map the most room, but the card also adapts to narrower containers.
 
-For a dedicated full-page view, add `full_view: true` beside `type`. This removes the card's outer margin, border, shadow, and rounded corners, and lets the map reach the card edge. Omit it when placing the card among other cards; the normal inset layout remains the default.
+For a dedicated full-page view, add `full_view: true` beside `type`. The map reaches the card edge while the card keeps an inset and follows the theme's rounded-corner scale. Omit it when placing the card among other cards; the normal map padding remains the default.
 
 ```yaml
 type: custom:vacuum-areas-card
