@@ -52,14 +52,14 @@ export class VacuumAreasCard extends HTMLElement {
               </div>
               <div class="rooms"></div>
               <div class="actions">
-                <button class="start" type="button">
-                  <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
+                <ha-button class="start" appearance="filled" variant="brand" type="button">
+                  <ha-icon slot="start" icon="mdi:play" aria-hidden="true"></ha-icon>
                   <span>Clean all rooms</span>
-                </button>
-                <button class="dock" type="button">
-                  <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
+                </ha-button>
+                <ha-button class="dock" appearance="outlined" variant="neutral" type="button">
+                  <ha-icon slot="start" icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
                   <span>Dock</span>
-                </button>
+                </ha-button>
               </div>
               <div class="feedback" role="status" aria-live="polite"></div>
             </div>

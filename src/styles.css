@@ -230,7 +230,6 @@ button:focus-visible {
   --mdc-icon-size: 17px;
 }
 .selection-toggle:hover:not(:disabled),
-.dock:hover:not(:disabled),
 .details:hover:not(:disabled) {
   background: var(
     --ha-color-fill-neutral-quiet-hover,
@@ -307,53 +306,23 @@ button:focus-visible {
 }
 .actions {
   display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  margin-top: 20px;
-  padding-top: 12px;
-  border-top: 1px solid var(--divider-color);
+  margin-top: 24px;
 }
-.actions button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.actions ha-button {
+  --ha-button-height: 48px;
   min-width: 0;
-  min-height: 44px;
-  border-radius: var(--ha-border-radius-md, 12px);
-  padding: 0 12px;
-  white-space: nowrap;
 }
 .actions ha-icon {
   --mdc-icon-size: 18px;
 }
-.dock {
-  border: 1px solid var(--divider-color);
-  color: var(--primary-text-color);
-  background: transparent;
-  font-size: 13px;
-}
 .actions .start {
-  flex: 0 1 auto;
-  border: 0;
-  background: transparent;
-  color: var(--primary-color);
-  font-size: 14px;
-  font-weight: 600;
+  flex: 1;
 }
-.start:hover:not(:disabled) {
-  background: var(
-    --ha-color-fill-neutral-quiet-hover,
-    var(--secondary-background-color)
-  );
+.actions .start::part(base) {
+  width: 100%;
 }
-.start:disabled {
-  opacity: 1;
-  border: 0;
-  background: transparent;
-  color: var(--secondary-text-color);
-}
-.dock {
+.actions .dock {
   flex: 0 0 auto;
 }
 .feedback {
