@@ -1,5 +1,13 @@
 import styles from "./styles.css";
 
+// Home Assistant VacuumEntityFeature flags.
+const VACUUM_FEATURE = {
+  PAUSE: 4,
+  RETURN_HOME: 16,
+  START: 8192,
+  CLEAN_AREA: 16384,
+};
+
 export class VacuumAreasCard extends HTMLElement {
   constructor() {
     super();
@@ -41,14 +49,24 @@ export class VacuumAreasCard extends HTMLElement {
               </div>
               <div class="rooms"></div>
               <div class="actions">
-                <button class="details" type="button">
-                  <ha-icon icon="mdi:tune-variant" aria-hidden="true"></ha-icon>
-                  <span>Controls</span>
-                </button>
                 <button class="start" type="button">
                   <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
                   <span>Clean rooms</span>
                 </button>
+                <div class="quick-controls">
+                  <button class="clean-all" type="button">
+                    <ha-icon icon="mdi:robot-vacuum" aria-hidden="true"></ha-icon>
+                    <span>Clean all</span>
+                  </button>
+                  <button class="dock" type="button">
+                    <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
+                    <span>Dock</span>
+                  </button>
+                  <button class="details" type="button">
+                    <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
+                    <span>More</span>
+                  </button>
+                </div>
               </div>
               <div class="feedback" role="status" aria-live="polite"></div>
             </div>
@@ -77,7 +95,10 @@ export class VacuumAreasCard extends HTMLElement {
     this._selectionIcon = this._selectionToggle.querySelector("ha-icon");
     this._selectionLabel = this._selectionToggle.querySelector("span");
     this._start = this.shadowRoot.querySelector(".start");
+    this._startIcon = this._start.querySelector("ha-icon");
     this._startLabel = this._start.querySelector("span");
+    this._cleanAll = this.shadowRoot.querySelector(".clean-all");
+    this._dock = this.shadowRoot.querySelector(".dock");
     this._feedback = this.shadowRoot.querySelector(".feedback");
     this._maintenance.addEventListener("click", () => {
       const path = this._config.maintenance?.navigation_path;
@@ -136,7 +157,11 @@ export class VacuumAreasCard extends HTMLElement {
       this._setFeedback("");
       this._updateSelection();
     });
-    this._start.addEventListener("click", () => this._clean());
+    this._start.addEventListener("click", () =>
+      this._perform(this._primaryAction),
+    );
+    this._cleanAll.addEventListener("click", () => this._perform("start"));
+    this._dock.addEventListener("click", () => this._perform("return_to_base"));
     this.shadowRoot.querySelector(".details").addEventListener("click", () => {
       this.dispatchEvent(
         new CustomEvent("hass-more-info", {
@@ -528,57 +553,99 @@ export class VacuumAreasCard extends HTMLElement {
   }
 
   _updateSelection() {
+    const vacuum =
+      this._hass?.states?.[this._config.vacuums[this._index].entity];
+    const state = vacuum?.state;
+    const features = Number(vacuum?.attributes?.supported_features) || 0;
+    const ready = state === "idle" || state === "docked";
+    const action =
+      state === "cleaning"
+        ? "pause"
+        : state === "paused"
+          ? "start"
+          : "clean_area";
+    const feature =
+      action === "pause"
+        ? VACUUM_FEATURE.PAUSE
+        : action === "start"
+          ? VACUUM_FEATURE.START
+          : VACUUM_FEATURE.CLEAN_AREA;
     for (const button of this._rooms.querySelectorAll("button.room")) {
       button.setAttribute(
         "aria-pressed",
         String(this._selected.has(button.dataset.areaId)),
       );
-      button.disabled = !!this._busy;
+      button.disabled = !ready || !!this._busy;
     }
     for (const tab of this._tabs.children) tab.disabled = !!this._busy;
     const rooms = this._metadata?.[this._index] || [];
-    const state =
-      this._hass?.states?.[this._config.vacuums[this._index].entity]?.state;
-    this._selectionToggle.disabled = !rooms.length || this._busy;
+    this._selectionToggle.disabled = !rooms.length || !ready || this._busy;
     this._selectionIcon.icon = this._selected.size
       ? "mdi:close"
       : "mdi:select-all";
     this._selectionLabel.textContent = this._selected.size
       ? "Clear selection"
       : "Select all";
+    this._primaryAction = action;
     this._start.disabled =
-      !this._selected.size ||
+      this._busy ||
+      !(features & feature) ||
+      (action === "clean_area" && (!ready || !this._selected.size));
+    this._startIcon.icon = action === "pause" ? "mdi:pause" : "mdi:play";
+    let label = this._selected.size
+      ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
+      : "Clean rooms";
+    if (state === "cleaning") label = "Pause cleaning";
+    if (state === "paused") label = "Resume cleaning";
+    if (state === "returning") label = "Returning to dock";
+    this._startLabel.textContent = this._busy ? "Sending…" : label;
+    this._cleanAll.disabled =
+      !ready || !(features & VACUUM_FEATURE.START) || this._busy;
+    this._dock.disabled =
       !state ||
-      ["unknown", "unavailable"].includes(state) ||
+      ["docked", "returning", "unknown", "unavailable"].includes(state) ||
+      !(features & VACUUM_FEATURE.RETURN_HOME) ||
       this._busy;
-    this._startLabel.textContent = this._busy
-      ? "Starting…"
-      : this._selected.size
-        ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
-        : "Clean rooms";
   }
 
-  async _clean() {
-    if (this._busy || !this._selected.size) return;
+  async _perform(service) {
+    if (
+      this._busy ||
+      !["clean_area", "start", "pause", "return_to_base"].includes(service) ||
+      (service === "clean_area" && !this._selected.size)
+    )
+      return;
     const index = this._index;
     const vacuum = this._config.vacuums[this._index].entity;
     const ids = [...this._selected];
+    const resuming = this._hass?.states?.[vacuum]?.state === "paused";
     this._busy = true;
     this._renderRooms();
     try {
       await this._hass.callService(
         "vacuum",
-        "clean_area",
-        { cleaning_area_id: ids },
+        service,
+        service === "clean_area" ? { cleaning_area_id: ids } : {},
         { entity_id: vacuum },
       );
-      if (this._index === index) this._selected.clear();
+      if (service === "clean_area" && this._index === index)
+        this._selected.clear();
       this._setFeedback(
-        `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.`,
+        service === "clean_area"
+          ? `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.`
+          : service === "return_to_base"
+            ? "Return to dock requested."
+            : service === "pause"
+              ? "Pause requested."
+              : resuming
+                ? "Resume requested."
+                : "Cleaning requested.",
       );
     } catch (_) {
       this._setFeedback(
-        "Could not start cleaning. Check the robot controls.",
+        service === "clean_area"
+          ? "Could not start cleaning. Check the robot details."
+          : "Could not control the vacuum. Try again.",
         true,
       );
     } finally {

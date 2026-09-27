@@ -57,7 +57,7 @@ maintenance:
 
 The upkeep button appears only when that sensor has a positive numeric value. `navigation_path` must be a local Home Assistant path.
 
-Select rooms, then press **Clean rooms**. The card sends one `vacuum.clean_area` request containing the selected Home Assistant area IDs. **Controls** opens the vacuum's native more-info dialog. Changing vacuums clears the current selection. The card does not start a cleaning run until you press the Clean button.
+Select rooms, then press **Clean rooms**. The card sends one `vacuum.clean_area` request containing the selected Home Assistant area IDs. While the vacuum is cleaning, that button becomes **Pause cleaning**; when paused, it becomes **Resume cleaning**. **Clean all** starts a whole-home clean, **Dock** sends the vacuum back to its base, and **More** opens Home Assistant's native vacuum dialog. Controls are disabled when the vacuum's state or supported features do not allow the action. Changing vacuums clears the current room selection.
 
 On touch screens, pinch to zoom the map and drag it while zoomed. Double tap resets it. With a keyboard, focus the map and use `+`, `-`, or `0`. Floor tabs support arrow, Home, and End keys.
 

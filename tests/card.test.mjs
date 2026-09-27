@@ -34,6 +34,32 @@ function cardWithoutDom() {
   return card;
 }
 
+function cardWithControls(state, selected = []) {
+  const card = Object.create(Card.prototype);
+  const vacuum = "vacuum.robot";
+  card._config = { vacuums: [{ entity: vacuum }] };
+  card._index = 0;
+  card._busy = false;
+  card._hass = {
+    states: {
+      [vacuum]: { state, attributes: { supported_features: 30524 } },
+    },
+  };
+  card._selected = new Set(selected);
+  card._metadata = [[{ id: "kitchen" }]];
+  card._rooms = { querySelectorAll: () => [] };
+  card._tabs = { children: [] };
+  card._selectionToggle = {};
+  card._selectionIcon = {};
+  card._selectionLabel = {};
+  card._start = {};
+  card._startIcon = {};
+  card._startLabel = {};
+  card._cleanAll = {};
+  card._dock = {};
+  return card;
+}
+
 test("configuration needs a vacuum and map, with optional extras", () => {
   const card = cardWithoutDom();
   assert.throws(() => card.setConfig({ vacuums: [] }));
@@ -150,7 +176,7 @@ test("cleaning sends only selected mapped area IDs to the chosen vacuum", async 
     feedback = { message, error };
   };
 
-  await card._clean();
+  await card._perform("clean_area");
 
   assert.deepEqual(JSON.parse(JSON.stringify(action)), [
     "vacuum",
@@ -179,9 +205,71 @@ test("a failed cleaning request leaves the selection available to retry", async 
     feedback = { message, error };
   };
 
-  await card._clean();
+  await card._perform("clean_area");
 
   assert.deepEqual([...card._selected], ["kitchen"]);
   assert.equal(card._busy, false);
   assert.equal(feedback.error, true);
+});
+
+test("the primary control follows the vacuum state", () => {
+  const card = cardWithControls("docked", ["kitchen"]);
+  card._updateSelection();
+  assert.equal(card._primaryAction, "clean_area");
+  assert.equal(card._startLabel.textContent, "Clean 1 room");
+  assert.equal(card._start.disabled, false);
+  assert.equal(card._cleanAll.disabled, false);
+  assert.equal(card._dock.disabled, true);
+
+  card._hass.states["vacuum.robot"].state = "cleaning";
+  card._updateSelection();
+  assert.equal(card._primaryAction, "pause");
+  assert.equal(card._startLabel.textContent, "Pause cleaning");
+  assert.equal(card._start.disabled, false);
+  assert.equal(card._cleanAll.disabled, true);
+  assert.equal(card._dock.disabled, false);
+  assert.equal(card._selectionToggle.disabled, true);
+
+  card._hass.states["vacuum.robot"].state = "paused";
+  card._updateSelection();
+  assert.equal(card._primaryAction, "start");
+  assert.equal(card._startLabel.textContent, "Resume cleaning");
+  assert.equal(card._start.disabled, false);
+
+  card._hass.states["vacuum.robot"].state = "returning";
+  card._updateSelection();
+  assert.equal(card._startLabel.textContent, "Returning to dock");
+  assert.equal(card._start.disabled, true);
+  assert.equal(card._dock.disabled, true);
+
+  card._hass.states["vacuum.robot"].state = "cleaning";
+  card._hass.states["vacuum.robot"].attributes.supported_features = 0;
+  card._updateSelection();
+  assert.equal(card._start.disabled, true);
+  assert.equal(card._dock.disabled, true);
+});
+
+test("quick controls use Home Assistant vacuum actions for the selected robot", async () => {
+  const card = cardWithControls("paused");
+  const calls = [];
+  const feedback = [];
+  card._hass.callService = async (...args) => calls.push(args);
+  card._renderRooms = () => {};
+  card._setFeedback = (message) => feedback.push(message);
+
+  await card._perform("start");
+  await card._perform("pause");
+  await card._perform("return_to_base");
+
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [
+    ["vacuum", "start", {}, { entity_id: "vacuum.robot" }],
+    ["vacuum", "pause", {}, { entity_id: "vacuum.robot" }],
+    ["vacuum", "return_to_base", {}, { entity_id: "vacuum.robot" }],
+  ]);
+  assert.deepEqual(feedback, [
+    "Resume requested.",
+    "Pause requested.",
+    "Return to dock requested.",
+  ]);
+  assert.equal(card._busy, false);
 });

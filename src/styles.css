@@ -218,7 +218,7 @@ button:focus-visible {
   --mdc-icon-size: 17px;
 }
 .selection-toggle:hover:not(:disabled),
-.details:hover {
+.quick-controls button:hover:not(:disabled) {
   background: color-mix(
     in srgb,
     var(--primary-text-color) 5%,
@@ -307,10 +307,14 @@ button:focus-visible {
 }
 .actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: auto;
   padding-top: 20px;
+}
+.quick-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 .actions button {
   display: flex;
@@ -326,10 +330,13 @@ button:focus-visible {
 .actions ha-icon {
   --mdc-icon-size: 18px;
 }
-.details {
+.quick-controls button {
   border: 1px solid var(--divider-color);
   color: var(--primary-text-color);
   background: transparent;
+  gap: 5px;
+  padding: 0 4px;
+  font-size: 13px;
 }
 .start {
   border: 0;

@@ -1,9 +1,15 @@
 /* Generated from src/. Edit the source files, then run npm run build. */
 (() => {
   // src/styles.css
-  var styles_default = ':host {\n  display: block;\n  min-width: 0;\n  width: calc(100% - 32px);\n  margin: 16px auto;\n  container-type: inline-size;\n}\n:host([full-view]) {\n  width: 100%;\n  margin: 0;\n}\n[hidden] {\n  display: none !important;\n}\nha-card {\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n  height: calc(100dvh - 88px);\n  overflow: hidden;\n  border: 1px solid var(--divider-color);\n  border-radius: 18px;\n}\n:host([full-view]) ha-card {\n  height: calc(100dvh - var(--header-height, 56px));\n  border: 0;\n  border-radius: 0;\n  box-shadow: none;\n}\nbutton {\n  font: inherit;\n  cursor: pointer;\n}\nbutton:disabled {\n  cursor: default;\n  opacity: 0.48;\n}\nbutton:focus-visible {\n  outline: 2px solid var(--primary-color);\n  outline-offset: 2px;\n}\n.tabs {\n  display: flex;\n  gap: 4px;\n  padding: 8px 16px 0;\n  border-bottom: 1px solid var(--divider-color);\n}\n.tab {\n  min-height: 44px;\n  padding: 0 16px;\n  border: 0;\n  border-bottom: 2px solid transparent;\n  background: transparent;\n  color: var(--secondary-text-color);\n  font-weight: 500;\n}\n.tab[aria-selected="true"] {\n  color: var(--primary-text-color);\n  border-bottom-color: var(--primary-color);\n}\n.body {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) clamp(340px, 38%, 440px);\n  flex: 1;\n  min-height: 0;\n  gap: 0;\n}\n.map {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  box-sizing: border-box;\n  width: 100%;\n  height: 100%;\n  min-width: 0;\n  padding: 12px;\n  overflow: hidden;\n  background: var(--card-background-color);\n}\n:host([full-view]) .map {\n  padding: 0;\n}\n.map-viewer {\n  --base-scale: 1;\n  position: relative;\n  width: 100%;\n  height: 100%;\n  border-radius: 12px;\n  overflow: hidden;\n  background: var(--primary-background-color);\n  touch-action: pan-y;\n}\n:host([full-view]) .map-viewer {\n  border-radius: 0;\n}\n.map-viewer:focus-visible {\n  outline: 2px solid var(--primary-color);\n  outline-offset: -2px;\n}\n.map-viewer.zoomed {\n  touch-action: none;\n  cursor: grab;\n}\n.map-viewer.zoomed:active {\n  cursor: grabbing;\n}\n.map img {\n  display: block;\n  width: 100%;\n  height: 100%;\n  object-fit: contain;\n  user-select: none;\n  -webkit-user-drag: none;\n}\n.map-empty {\n  position: absolute;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  color: var(--secondary-text-color);\n}\n.panel {\n  min-width: 0;\n  padding: 24px;\n  border-left: 1px solid var(--divider-color);\n  display: flex;\n  flex-direction: column;\n}\n.status {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 24px;\n}\n.status ha-icon {\n  color: var(--primary-color);\n  --mdc-icon-size: 24px;\n  width: 42px;\n  height: 42px;\n  flex: 0 0 42px;\n  display: grid;\n  place-items: center;\n  border-radius: 50%;\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 14%,\n    var(--card-background-color)\n  );\n}\n.status-copy {\n  min-width: 0;\n  flex: 1;\n}\n.status strong {\n  display: block;\n  font-size: 18px;\n  line-height: 24px;\n}\n.status span {\n  color: var(--secondary-text-color);\n  line-height: 22px;\n}\n.maintenance {\n  min-width: 44px;\n  height: 44px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 3px;\n  border: 1px solid var(--warning-color, #ff9800);\n  border-radius: 12px;\n  background: color-mix(\n    in srgb,\n    var(--warning-color, #ff9800) 12%,\n    var(--card-background-color)\n  );\n  color: var(--warning-color, #ff9800);\n}\n.maintenance ha-icon {\n  width: auto;\n  height: auto;\n  flex: none;\n  border-radius: 0;\n  background: transparent;\n  color: inherit;\n  --mdc-icon-size: 20px;\n}\n.maintenance span {\n  color: inherit;\n  font-size: 13px;\n  font-weight: 600;\n}\n.rooms-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 12px;\n}\n.rooms-head strong {\n  font-size: 16px;\n}\n.selection-toggle {\n  min-height: 44px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  border: 1px solid var(--divider-color);\n  border-radius: 12px;\n  background: transparent;\n  color: var(--primary-text-color);\n  padding: 0 10px;\n  font-size: 13px;\n  white-space: nowrap;\n}\n.selection-toggle ha-icon {\n  --mdc-icon-size: 17px;\n}\n.selection-toggle:hover:not(:disabled),\n.details:hover {\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 5%,\n    var(--card-background-color)\n  );\n}\n.rooms {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 8px;\n}\n.room {\n  position: relative;\n  min-width: 0;\n  height: 112px;\n  box-sizing: border-box;\n  border: 1px solid var(--divider-color);\n  border-radius: 14px;\n  padding: 12px;\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 3%,\n    var(--card-background-color)\n  );\n  color: var(--primary-text-color);\n  text-align: left;\n  display: flex;\n  flex-direction: column;\n  justify-content: space-between;\n  gap: 4px;\n}\n.room:hover {\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 5%,\n    var(--card-background-color)\n  );\n}\n.room[aria-pressed="true"] {\n  border-color: var(--primary-color);\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 15%,\n    var(--card-background-color)\n  );\n}\n.room-icon {\n  display: grid;\n  place-items: center;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--secondary-background-color);\n  color: var(--secondary-text-color);\n}\n.room-icon ha-icon {\n  --mdc-icon-size: 20px;\n}\n.room[aria-pressed="true"] .room-icon {\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 20%,\n    var(--card-background-color)\n  );\n  color: var(--primary-color);\n}\n.room-name {\n  font-size: 13px;\n  font-weight: 500;\n  line-height: 17px;\n  overflow-wrap: anywhere;\n}\n.room-check {\n  position: absolute;\n  top: 12px;\n  right: 12px;\n  color: var(--primary-color);\n  --mdc-icon-size: 18px;\n}\n.room[aria-pressed="false"] .room-check {\n  display: none;\n}\n.hint {\n  color: var(--secondary-text-color);\n  line-height: 22px;\n}\n.actions {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 8px;\n  margin-top: auto;\n  padding-top: 20px;\n}\n.actions button {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  min-width: 0;\n  min-height: 48px;\n  border-radius: 12px;\n  padding: 0 8px;\n  white-space: nowrap;\n}\n.actions ha-icon {\n  --mdc-icon-size: 18px;\n}\n.details {\n  border: 1px solid var(--divider-color);\n  color: var(--primary-text-color);\n  background: transparent;\n}\n.start {\n  border: 0;\n  background: var(--primary-color);\n  color: var(--text-primary-color, white);\n  font-weight: 600;\n}\n.feedback {\n  min-height: 22px;\n  margin-top: 8px;\n  color: var(--secondary-text-color);\n  font-size: 13px;\n}\n.feedback:empty {\n  display: none;\n}\n.feedback.error {\n  color: var(--error-color);\n}\n@container (max-width: 720px) {\n  ha-card,\n  :host([full-view]) ha-card {\n    height: auto;\n  }\n  .body {\n    display: flex;\n    flex: none;\n    flex-direction: column;\n    min-height: auto;\n  }\n  .map {\n    height: clamp(280px, 40dvh, 360px);\n  }\n  .map-viewer {\n    --base-scale: 1.2;\n  }\n  .panel {\n    border-left: 0;\n    border-top: 1px solid var(--divider-color);\n    padding: 16px;\n  }\n  .status {\n    margin-bottom: 16px;\n  }\n  .rooms-head {\n    margin-bottom: 8px;\n  }\n  .rooms {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .room {\n    height: 64px;\n    padding: 8px 10px;\n    flex-direction: row;\n    align-items: center;\n    justify-content: flex-start;\n    gap: 8px;\n  }\n  .room-icon {\n    width: 28px;\n    height: 28px;\n    flex: 0 0 28px;\n  }\n  .room-icon ha-icon {\n    --mdc-icon-size: 18px;\n  }\n  .room-name {\n    line-height: 16px;\n  }\n  .room-check {\n    top: 5px;\n    left: 29px;\n    right: auto;\n    --mdc-icon-size: 14px;\n  }\n  .actions {\n    padding-top: 16px;\n  }\n}\n@container (max-width: 340px) {\n  .rooms {\n    grid-template-columns: 1fr;\n  }\n}\n@media (max-height: 700px) {\n  @container (min-width: 721px) {\n    .panel {\n      padding: 16px;\n    }\n    .status {\n      margin-bottom: 12px;\n    }\n    .rooms-head {\n      margin-bottom: 8px;\n    }\n    .room {\n      height: 80px;\n      padding: 8px;\n    }\n    .room-icon {\n      width: 28px;\n      height: 28px;\n    }\n    .room-icon ha-icon {\n      --mdc-icon-size: 18px;\n    }\n    .room-name {\n      font-size: 12px;\n      line-height: 16px;\n    }\n    .actions {\n      padding-top: 12px;\n    }\n  }\n}\n@container (min-width: 721px) {\n  .map-viewer {\n    --base-scale: 1.1;\n  }\n}\n@container (min-width: 1700px) {\n  .map-viewer {\n    --base-scale: 1.3;\n  }\n}\n';
+  var styles_default = ':host {\n  display: block;\n  min-width: 0;\n  width: calc(100% - 32px);\n  margin: 16px auto;\n  container-type: inline-size;\n}\n:host([full-view]) {\n  width: 100%;\n  margin: 0;\n}\n[hidden] {\n  display: none !important;\n}\nha-card {\n  display: flex;\n  flex-direction: column;\n  box-sizing: border-box;\n  height: calc(100dvh - 88px);\n  overflow: hidden;\n  border: 1px solid var(--divider-color);\n  border-radius: 18px;\n}\n:host([full-view]) ha-card {\n  height: calc(100dvh - var(--header-height, 56px));\n  border: 0;\n  border-radius: 0;\n  box-shadow: none;\n}\nbutton {\n  font: inherit;\n  cursor: pointer;\n}\nbutton:disabled {\n  cursor: default;\n  opacity: 0.48;\n}\nbutton:focus-visible {\n  outline: 2px solid var(--primary-color);\n  outline-offset: 2px;\n}\n.tabs {\n  display: flex;\n  gap: 4px;\n  padding: 8px 16px 0;\n  border-bottom: 1px solid var(--divider-color);\n}\n.tab {\n  min-height: 44px;\n  padding: 0 16px;\n  border: 0;\n  border-bottom: 2px solid transparent;\n  background: transparent;\n  color: var(--secondary-text-color);\n  font-weight: 500;\n}\n.tab[aria-selected="true"] {\n  color: var(--primary-text-color);\n  border-bottom-color: var(--primary-color);\n}\n.body {\n  display: grid;\n  grid-template-columns: minmax(0, 1fr) clamp(340px, 38%, 440px);\n  flex: 1;\n  min-height: 0;\n  gap: 0;\n}\n.map {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  box-sizing: border-box;\n  width: 100%;\n  height: 100%;\n  min-width: 0;\n  padding: 12px;\n  overflow: hidden;\n  background: var(--card-background-color);\n}\n:host([full-view]) .map {\n  padding: 0;\n}\n.map-viewer {\n  --base-scale: 1;\n  position: relative;\n  width: 100%;\n  height: 100%;\n  border-radius: 12px;\n  overflow: hidden;\n  background: var(--primary-background-color);\n  touch-action: pan-y;\n}\n:host([full-view]) .map-viewer {\n  border-radius: 0;\n}\n.map-viewer:focus-visible {\n  outline: 2px solid var(--primary-color);\n  outline-offset: -2px;\n}\n.map-viewer.zoomed {\n  touch-action: none;\n  cursor: grab;\n}\n.map-viewer.zoomed:active {\n  cursor: grabbing;\n}\n.map img {\n  display: block;\n  width: 100%;\n  height: 100%;\n  object-fit: contain;\n  user-select: none;\n  -webkit-user-drag: none;\n}\n.map-empty {\n  position: absolute;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  color: var(--secondary-text-color);\n}\n.panel {\n  min-width: 0;\n  padding: 24px;\n  border-left: 1px solid var(--divider-color);\n  display: flex;\n  flex-direction: column;\n}\n.status {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-bottom: 24px;\n}\n.status ha-icon {\n  color: var(--primary-color);\n  --mdc-icon-size: 24px;\n  width: 42px;\n  height: 42px;\n  flex: 0 0 42px;\n  display: grid;\n  place-items: center;\n  border-radius: 50%;\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 14%,\n    var(--card-background-color)\n  );\n}\n.status-copy {\n  min-width: 0;\n  flex: 1;\n}\n.status strong {\n  display: block;\n  font-size: 18px;\n  line-height: 24px;\n}\n.status span {\n  color: var(--secondary-text-color);\n  line-height: 22px;\n}\n.maintenance {\n  min-width: 44px;\n  height: 44px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 3px;\n  border: 1px solid var(--warning-color, #ff9800);\n  border-radius: 12px;\n  background: color-mix(\n    in srgb,\n    var(--warning-color, #ff9800) 12%,\n    var(--card-background-color)\n  );\n  color: var(--warning-color, #ff9800);\n}\n.maintenance ha-icon {\n  width: auto;\n  height: auto;\n  flex: none;\n  border-radius: 0;\n  background: transparent;\n  color: inherit;\n  --mdc-icon-size: 20px;\n}\n.maintenance span {\n  color: inherit;\n  font-size: 13px;\n  font-weight: 600;\n}\n.rooms-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 12px;\n}\n.rooms-head strong {\n  font-size: 16px;\n}\n.selection-toggle {\n  min-height: 44px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 5px;\n  border: 1px solid var(--divider-color);\n  border-radius: 12px;\n  background: transparent;\n  color: var(--primary-text-color);\n  padding: 0 10px;\n  font-size: 13px;\n  white-space: nowrap;\n}\n.selection-toggle ha-icon {\n  --mdc-icon-size: 17px;\n}\n.selection-toggle:hover:not(:disabled),\n.quick-controls button:hover:not(:disabled) {\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 5%,\n    var(--card-background-color)\n  );\n}\n.rooms {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 8px;\n}\n.room {\n  position: relative;\n  min-width: 0;\n  height: 112px;\n  box-sizing: border-box;\n  border: 1px solid var(--divider-color);\n  border-radius: 14px;\n  padding: 12px;\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 3%,\n    var(--card-background-color)\n  );\n  color: var(--primary-text-color);\n  text-align: left;\n  display: flex;\n  flex-direction: column;\n  justify-content: space-between;\n  gap: 4px;\n}\n.room:hover {\n  background: color-mix(\n    in srgb,\n    var(--primary-text-color) 5%,\n    var(--card-background-color)\n  );\n}\n.room[aria-pressed="true"] {\n  border-color: var(--primary-color);\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 15%,\n    var(--card-background-color)\n  );\n}\n.room-icon {\n  display: grid;\n  place-items: center;\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--secondary-background-color);\n  color: var(--secondary-text-color);\n}\n.room-icon ha-icon {\n  --mdc-icon-size: 20px;\n}\n.room[aria-pressed="true"] .room-icon {\n  background: color-mix(\n    in srgb,\n    var(--primary-color) 20%,\n    var(--card-background-color)\n  );\n  color: var(--primary-color);\n}\n.room-name {\n  font-size: 13px;\n  font-weight: 500;\n  line-height: 17px;\n  overflow-wrap: anywhere;\n}\n.room-check {\n  position: absolute;\n  top: 12px;\n  right: 12px;\n  color: var(--primary-color);\n  --mdc-icon-size: 18px;\n}\n.room[aria-pressed="false"] .room-check {\n  display: none;\n}\n.hint {\n  color: var(--secondary-text-color);\n  line-height: 22px;\n}\n.actions {\n  display: grid;\n  gap: 8px;\n  margin-top: auto;\n  padding-top: 20px;\n}\n.quick-controls {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 8px;\n}\n.actions button {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  min-width: 0;\n  min-height: 48px;\n  border-radius: 12px;\n  padding: 0 8px;\n  white-space: nowrap;\n}\n.actions ha-icon {\n  --mdc-icon-size: 18px;\n}\n.quick-controls button {\n  border: 1px solid var(--divider-color);\n  color: var(--primary-text-color);\n  background: transparent;\n  gap: 5px;\n  padding: 0 4px;\n  font-size: 13px;\n}\n.start {\n  border: 0;\n  background: var(--primary-color);\n  color: var(--text-primary-color, white);\n  font-weight: 600;\n}\n.feedback {\n  min-height: 22px;\n  margin-top: 8px;\n  color: var(--secondary-text-color);\n  font-size: 13px;\n}\n.feedback:empty {\n  display: none;\n}\n.feedback.error {\n  color: var(--error-color);\n}\n@container (max-width: 720px) {\n  ha-card,\n  :host([full-view]) ha-card {\n    height: auto;\n  }\n  .body {\n    display: flex;\n    flex: none;\n    flex-direction: column;\n    min-height: auto;\n  }\n  .map {\n    height: clamp(280px, 40dvh, 360px);\n  }\n  .map-viewer {\n    --base-scale: 1.2;\n  }\n  .panel {\n    border-left: 0;\n    border-top: 1px solid var(--divider-color);\n    padding: 16px;\n  }\n  .status {\n    margin-bottom: 16px;\n  }\n  .rooms-head {\n    margin-bottom: 8px;\n  }\n  .rooms {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n  .room {\n    height: 64px;\n    padding: 8px 10px;\n    flex-direction: row;\n    align-items: center;\n    justify-content: flex-start;\n    gap: 8px;\n  }\n  .room-icon {\n    width: 28px;\n    height: 28px;\n    flex: 0 0 28px;\n  }\n  .room-icon ha-icon {\n    --mdc-icon-size: 18px;\n  }\n  .room-name {\n    line-height: 16px;\n  }\n  .room-check {\n    top: 5px;\n    left: 29px;\n    right: auto;\n    --mdc-icon-size: 14px;\n  }\n  .actions {\n    padding-top: 16px;\n  }\n}\n@container (max-width: 340px) {\n  .rooms {\n    grid-template-columns: 1fr;\n  }\n}\n@media (max-height: 700px) {\n  @container (min-width: 721px) {\n    .panel {\n      padding: 16px;\n    }\n    .status {\n      margin-bottom: 12px;\n    }\n    .rooms-head {\n      margin-bottom: 8px;\n    }\n    .room {\n      height: 80px;\n      padding: 8px;\n    }\n    .room-icon {\n      width: 28px;\n      height: 28px;\n    }\n    .room-icon ha-icon {\n      --mdc-icon-size: 18px;\n    }\n    .room-name {\n      font-size: 12px;\n      line-height: 16px;\n    }\n    .actions {\n      padding-top: 12px;\n    }\n  }\n}\n@container (min-width: 721px) {\n  .map-viewer {\n    --base-scale: 1.1;\n  }\n}\n@container (min-width: 1700px) {\n  .map-viewer {\n    --base-scale: 1.3;\n  }\n}\n';
 
   // src/card.js
+  var VACUUM_FEATURE = {
+    PAUSE: 4,
+    RETURN_HOME: 16,
+    START: 8192,
+    CLEAN_AREA: 16384
+  };
   var VacuumAreasCard = class extends HTMLElement {
     constructor() {
       super();
@@ -45,14 +51,24 @@
               </div>
               <div class="rooms"></div>
               <div class="actions">
-                <button class="details" type="button">
-                  <ha-icon icon="mdi:tune-variant" aria-hidden="true"></ha-icon>
-                  <span>Controls</span>
-                </button>
                 <button class="start" type="button">
                   <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
                   <span>Clean rooms</span>
                 </button>
+                <div class="quick-controls">
+                  <button class="clean-all" type="button">
+                    <ha-icon icon="mdi:robot-vacuum" aria-hidden="true"></ha-icon>
+                    <span>Clean all</span>
+                  </button>
+                  <button class="dock" type="button">
+                    <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
+                    <span>Dock</span>
+                  </button>
+                  <button class="details" type="button">
+                    <ha-icon icon="mdi:dots-horizontal" aria-hidden="true"></ha-icon>
+                    <span>More</span>
+                  </button>
+                </div>
               </div>
               <div class="feedback" role="status" aria-live="polite"></div>
             </div>
@@ -81,7 +97,10 @@
       this._selectionIcon = this._selectionToggle.querySelector("ha-icon");
       this._selectionLabel = this._selectionToggle.querySelector("span");
       this._start = this.shadowRoot.querySelector(".start");
+      this._startIcon = this._start.querySelector("ha-icon");
       this._startLabel = this._start.querySelector("span");
+      this._cleanAll = this.shadowRoot.querySelector(".clean-all");
+      this._dock = this.shadowRoot.querySelector(".dock");
       this._feedback = this.shadowRoot.querySelector(".feedback");
       this._maintenance.addEventListener("click", () => {
         const path = this._config.maintenance?.navigation_path;
@@ -141,7 +160,12 @@
         this._setFeedback("");
         this._updateSelection();
       });
-      this._start.addEventListener("click", () => this._clean());
+      this._start.addEventListener(
+        "click",
+        () => this._perform(this._primaryAction)
+      );
+      this._cleanAll.addEventListener("click", () => this._perform("start"));
+      this._dock.addEventListener("click", () => this._perform("return_to_base"));
       this.shadowRoot.querySelector(".details").addEventListener("click", () => {
         this.dispatchEvent(
           new CustomEvent("hass-more-info", {
@@ -454,43 +478,59 @@
       this._updateSelection();
     }
     _updateSelection() {
+      const vacuum = this._hass?.states?.[this._config.vacuums[this._index].entity];
+      const state = vacuum?.state;
+      const features = Number(vacuum?.attributes?.supported_features) || 0;
+      const ready = state === "idle" || state === "docked";
+      const action = state === "cleaning" ? "pause" : state === "paused" ? "start" : "clean_area";
+      const feature = action === "pause" ? VACUUM_FEATURE.PAUSE : action === "start" ? VACUUM_FEATURE.START : VACUUM_FEATURE.CLEAN_AREA;
       for (const button of this._rooms.querySelectorAll("button.room")) {
         button.setAttribute(
           "aria-pressed",
           String(this._selected.has(button.dataset.areaId))
         );
-        button.disabled = !!this._busy;
+        button.disabled = !ready || !!this._busy;
       }
       for (const tab of this._tabs.children) tab.disabled = !!this._busy;
       const rooms = this._metadata?.[this._index] || [];
-      const state = this._hass?.states?.[this._config.vacuums[this._index].entity]?.state;
-      this._selectionToggle.disabled = !rooms.length || this._busy;
+      this._selectionToggle.disabled = !rooms.length || !ready || this._busy;
       this._selectionIcon.icon = this._selected.size ? "mdi:close" : "mdi:select-all";
       this._selectionLabel.textContent = this._selected.size ? "Clear selection" : "Select all";
-      this._start.disabled = !this._selected.size || !state || ["unknown", "unavailable"].includes(state) || this._busy;
-      this._startLabel.textContent = this._busy ? "Starting\u2026" : this._selected.size ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}` : "Clean rooms";
+      this._primaryAction = action;
+      this._start.disabled = this._busy || !(features & feature) || action === "clean_area" && (!ready || !this._selected.size);
+      this._startIcon.icon = action === "pause" ? "mdi:pause" : "mdi:play";
+      let label = this._selected.size ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}` : "Clean rooms";
+      if (state === "cleaning") label = "Pause cleaning";
+      if (state === "paused") label = "Resume cleaning";
+      if (state === "returning") label = "Returning to dock";
+      this._startLabel.textContent = this._busy ? "Sending\u2026" : label;
+      this._cleanAll.disabled = !ready || !(features & VACUUM_FEATURE.START) || this._busy;
+      this._dock.disabled = !state || ["docked", "returning", "unknown", "unavailable"].includes(state) || !(features & VACUUM_FEATURE.RETURN_HOME) || this._busy;
     }
-    async _clean() {
-      if (this._busy || !this._selected.size) return;
+    async _perform(service) {
+      if (this._busy || !["clean_area", "start", "pause", "return_to_base"].includes(service) || service === "clean_area" && !this._selected.size)
+        return;
       const index = this._index;
       const vacuum = this._config.vacuums[this._index].entity;
       const ids = [...this._selected];
+      const resuming = this._hass?.states?.[vacuum]?.state === "paused";
       this._busy = true;
       this._renderRooms();
       try {
         await this._hass.callService(
           "vacuum",
-          "clean_area",
-          { cleaning_area_id: ids },
+          service,
+          service === "clean_area" ? { cleaning_area_id: ids } : {},
           { entity_id: vacuum }
         );
-        if (this._index === index) this._selected.clear();
+        if (service === "clean_area" && this._index === index)
+          this._selected.clear();
         this._setFeedback(
-          `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.`
+          service === "clean_area" ? `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.` : service === "return_to_base" ? "Return to dock requested." : service === "pause" ? "Pause requested." : resuming ? "Resume requested." : "Cleaning requested."
         );
       } catch (_) {
         this._setFeedback(
-          "Could not start cleaning. Check the robot controls.",
+          service === "clean_area" ? "Could not start cleaning. Check the robot details." : "Could not control the vacuum. Try again.",
           true
         );
       } finally {
