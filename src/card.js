@@ -3,10 +3,15 @@ import styles from "./styles.css";
 // Home Assistant VacuumEntityFeature flags.
 const VACUUM_FEATURE = {
   PAUSE: 4,
+  STOP: 8,
   RETURN_HOME: 16,
   START: 8192,
   CLEAN_AREA: 16384,
 };
+// Do not attribute a later clean started elsewhere to this card's request.
+const JOB_START_WINDOW_MS = 30_000;
+const isMapControlEvent = (event) =>
+  !!event.target?.closest?.("button, a, input, select, textarea");
 
 export class VacuumAreasCard extends HTMLElement {
   constructor() {
@@ -14,6 +19,7 @@ export class VacuumAreasCard extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._index = 0;
     this._selected = new Set();
+    this._jobs = new Map();
     this._metadata = null;
     this._roomsError = false;
     this._roomKey = null;
@@ -28,7 +34,10 @@ export class VacuumAreasCard extends HTMLElement {
             <div class="map">
               <div class="map-viewer" role="group" aria-label="Vacuum map. Pinch to zoom." tabindex="0">
                 <img alt="" hidden>
-                <span class="map-empty">Map unavailable</span>
+                <div class="map-empty">
+                  <span>Map unavailable</span>
+                  <button class="map-retry" type="button" hidden>Retry map</button>
+                </div>
               </div>
             </div>
             <div class="panel">
@@ -56,6 +65,10 @@ export class VacuumAreasCard extends HTMLElement {
                   <ha-icon icon="mdi:play" aria-hidden="true"></ha-icon>
                   <span>Clean all rooms</span>
                 </button>
+                <button class="stop" type="button">
+                  <ha-icon icon="mdi:stop" aria-hidden="true"></ha-icon>
+                  <span>Stop</span>
+                </button>
                 <button class="dock" type="button">
                   <ha-icon icon="mdi:home-import-outline" aria-hidden="true"></ha-icon>
                   <span>Dock</span>
@@ -70,11 +83,16 @@ export class VacuumAreasCard extends HTMLElement {
     this._mapViewer = this.shadowRoot.querySelector(".map-viewer");
     this._map = this.shadowRoot.querySelector(".map img");
     this._mapEmpty = this.shadowRoot.querySelector(".map-empty");
+    this._mapRetryButton = this.shadowRoot.querySelector(".map-retry");
     this._map.addEventListener("error", () => {
       this._failedMapSrc = this._map.getAttribute("src");
       this._map.hidden = true;
       this._mapEmpty.hidden = false;
+      this._mapRetryButton.hidden = false;
     });
+    this._mapRetryButton.addEventListener("click", () => this._retryMap());
+    this._mapBaseSrc = "";
+    this._mapRetry = 0;
     this._zoom = 1;
     this._pan = { x: 0, y: 0 };
     this._pointers = new Map();
@@ -90,6 +108,7 @@ export class VacuumAreasCard extends HTMLElement {
     this._start = this.shadowRoot.querySelector(".start");
     this._startIcon = this._start.querySelector("ha-icon");
     this._startLabel = this._start.querySelector("span");
+    this._stop = this.shadowRoot.querySelector(".stop");
     this._dock = this.shadowRoot.querySelector(".dock");
     this._feedback = this.shadowRoot.querySelector(".feedback");
     this._maintenance.addEventListener("click", () => {
@@ -120,11 +139,14 @@ export class VacuumAreasCard extends HTMLElement {
     this._mapViewer.addEventListener("pointercancel", (event) =>
       this._pointerUp(event),
     );
-    this._mapViewer.addEventListener("dblclick", () => this._resetMap());
+    this._mapViewer.addEventListener("dblclick", (event) => {
+      if (!isMapControlEvent(event)) this._resetMap();
+    });
     this._mapViewer.addEventListener(
       "wheel",
       (event) => {
-        if (!event.ctrlKey || !this._map.getAttribute("src")) return;
+        if (!event.ctrlKey || this._map.hidden || isMapControlEvent(event))
+          return;
         event.preventDefault();
         this._zoomAt(
           event.clientX,
@@ -135,6 +157,7 @@ export class VacuumAreasCard extends HTMLElement {
       { passive: false },
     );
     this._mapViewer.addEventListener("keydown", (event) => {
+      if (isMapControlEvent(event)) return;
       if (event.key === "0") this._resetMap();
       else if (event.key === "+" || event.key === "=")
         this._zoomAt(null, null, 1.35);
@@ -152,6 +175,7 @@ export class VacuumAreasCard extends HTMLElement {
     this._start.addEventListener("click", () =>
       this._perform(this._primaryAction),
     );
+    this._stop.addEventListener("click", () => this._perform("stop"));
     this._dock.addEventListener("click", () => this._perform("return_to_base"));
     this.shadowRoot.querySelector(".details").addEventListener("click", () => {
       this.dispatchEvent(
@@ -198,6 +222,10 @@ export class VacuumAreasCard extends HTMLElement {
     this.toggleAttribute("full-view", config.full_view === true);
     this._index = 0;
     this._selected.clear();
+    this._jobs.clear();
+    this._mapBaseSrc = "";
+    this._mapRetry = 0;
+    this._failedMapSrc = null;
     this._resetMap();
     this._metadata = null;
     this._roomsError = false;
@@ -269,18 +297,27 @@ export class VacuumAreasCard extends HTMLElement {
     if (this._busy || index === this._index) return;
     this._index = index;
     this._selected.clear();
+    this._mapBaseSrc = "";
+    this._mapRetry = 0;
+    this._failedMapSrc = null;
     this._resetMap();
     this._setFeedback("");
     this._render();
   }
 
   async _loadRooms() {
-    if (!this._config || !this._hass?.callWS || this._metadata || this._loading)
+    if (
+      !this._config ||
+      !this._hass?.callWS ||
+      this._metadata ||
+      this._loading ||
+      this._roomsError
+    )
       return;
     const request = ++this._request;
     this._loading = true;
     try {
-      const [areas, ...entries] = await Promise.all([
+      const [areasResult, ...entries] = await Promise.allSettled([
         this._hass.callWS({ type: "config/area_registry/list" }),
         ...this._config.vacuums.map((item) =>
           this._hass.callWS({
@@ -290,17 +327,21 @@ export class VacuumAreasCard extends HTMLElement {
         ),
       ]);
       if (request !== this._request) return;
+      if (areasResult.status === "rejected") throw areasResult.reason;
+      const areas = areasResult.value;
       const names = new Map(
         areas.map((area) => [
           area.area_id,
           { name: area.name, icon: area.icon || "mdi:home-outline" },
         ]),
       );
-      this._metadata = entries.map((entry) =>
-        Object.keys(entry.options?.vacuum?.area_mapping || {})
-          .filter((id) => names.has(id))
-          .map((id) => ({ id, ...names.get(id) }))
-          .sort((a, b) => a.name.localeCompare(b.name)),
+      this._metadata = entries.map((result) =>
+        result.status === "fulfilled" && result.value
+          ? Object.keys(result.value.options?.vacuum?.area_mapping || {})
+              .filter((id) => names.has(id))
+              .map((id) => ({ id, ...names.get(id) }))
+              .sort((a, b) => a.name.localeCompare(b.name))
+          : null,
       );
       this._roomsError = false;
       this._setFeedback("");
@@ -315,6 +356,22 @@ export class VacuumAreasCard extends HTMLElement {
         this._renderRooms();
       }
     }
+  }
+
+  _retryRooms() {
+    if (this._loading) return;
+    this._metadata = null;
+    this._roomsError = false;
+    this._roomKey = null;
+    const reload = this._loadRooms();
+    this._renderRooms();
+    return reload;
+  }
+
+  _retryMap() {
+    this._mapRetry++;
+    this._failedMapSrc = null;
+    this._render();
   }
 
   _label(item) {
@@ -362,17 +419,26 @@ export class VacuumAreasCard extends HTMLElement {
     }
     const map = this._hass?.states?.[item.map];
     const picture = map?.attributes?.entity_picture;
-    const src = picture
+    const baseSrc = picture
       ? picture +
         (picture.includes("?") ? "&" : "?") +
         "state=" +
         encodeURIComponent(map.state)
+      : "";
+    if (baseSrc !== this._mapBaseSrc) {
+      this._mapBaseSrc = baseSrc;
+      this._mapRetry = 0;
+      this._failedMapSrc = null;
+    }
+    const src = baseSrc
+      ? `${baseSrc}${this._mapRetry ? `&retry=${this._mapRetry}` : ""}`
       : "";
     if (src && this._map.getAttribute("src") !== src) this._map.src = src;
     if (!src) this._map.removeAttribute("src");
     const hasMap = !!src && src !== this._failedMapSrc;
     this._map.hidden = !hasMap;
     this._mapEmpty.hidden = hasMap;
+    this._mapRetryButton.hidden = !src || hasMap;
     this._mapViewer.tabIndex = hasMap ? 0 : -1;
     this._mapViewer.setAttribute(
       "aria-label",
@@ -403,7 +469,9 @@ export class VacuumAreasCard extends HTMLElement {
 
   _pointerDown(event) {
     if (
+      this._map.hidden ||
       !this._map.getAttribute("src") ||
+      isMapControlEvent(event) ||
       (event.pointerType === "mouse" && event.button !== 0)
     )
       return;
@@ -498,18 +566,29 @@ export class VacuumAreasCard extends HTMLElement {
 
   _renderRooms() {
     const rooms = this._metadata?.[this._index] || [];
-    const key = `${this._index}:${this._metadata ? "ready" : this._roomsError ? "error" : "loading"}`;
+    const failed = this._roomsError || this._metadata?.[this._index] === null;
+    const key = `${this._index}:${failed ? "error" : this._metadata ? "ready" : "loading"}`;
     if (key !== this._roomKey) {
       this._roomKey = key;
       this._rooms.replaceChildren();
       if (!rooms.length) {
-        const hint = document.createElement("span");
+        const hint = document.createElement("div");
         hint.className = "hint";
-        hint.textContent = this._roomsError
+        const message = document.createElement("span");
+        message.textContent = failed
           ? "Rooms unavailable"
           : this._metadata
             ? "No mapped rooms"
             : "Loading rooms…";
+        hint.append(message);
+        if (failed) {
+          const retry = document.createElement("button");
+          retry.type = "button";
+          retry.className = "rooms-retry";
+          retry.textContent = "Retry";
+          retry.addEventListener("click", () => this._retryRooms());
+          hint.append(retry);
+        }
         this._rooms.append(hint);
       }
       for (const room of rooms) {
@@ -544,11 +623,24 @@ export class VacuumAreasCard extends HTMLElement {
   }
 
   _updateSelection() {
-    const vacuum =
-      this._hass?.states?.[this._config.vacuums[this._index].entity];
+    const entity = this._config.vacuums[this._index].entity;
+    const vacuum = this._hass?.states?.[entity];
     const state = vacuum?.state;
     const features = Number(vacuum?.attributes?.supported_features) || 0;
     const ready = state === "idle" || state === "docked";
+    const cleaning = state === "cleaning" || state === "paused";
+    const job = this._jobs.get(entity);
+    if (
+      job &&
+      !job.running &&
+      Date.now() - job.requestedAt > JOB_START_WINDOW_MS
+    )
+      this._jobs.delete(entity);
+    const currentJob = this._jobs.get(entity);
+    if (currentJob && cleaning) currentJob.running = true;
+    if (currentJob?.running && ["idle", "docked", "returning"].includes(state))
+      this._jobs.delete(entity);
+    const activeAreas = cleaning ? this._jobs.get(entity)?.areas : null;
     const action =
       state === "cleaning"
         ? "pause"
@@ -564,7 +656,11 @@ export class VacuumAreasCard extends HTMLElement {
     for (const button of this._rooms.querySelectorAll("button.room")) {
       button.setAttribute(
         "aria-pressed",
-        String(this._selected.has(button.dataset.areaId)),
+        String(
+          ready
+            ? this._selected.has(button.dataset.areaId)
+            : !!activeAreas?.has(button.dataset.areaId),
+        ),
       );
       button.disabled = !ready || !!this._busy;
     }
@@ -587,12 +683,16 @@ export class VacuumAreasCard extends HTMLElement {
     let label = this._selected.size
       ? `Clean ${this._selected.size} ${this._selected.size === 1 ? "room" : "rooms"}`
       : "Clean all rooms";
-    if (state === "cleaning") label = "Pause cleaning";
+    if (state === "cleaning") label = "Pause";
     if (state === "paused") label = "Resume cleaning";
     if (state === "returning") label = "Returning to dock";
     if (state === "unknown" || state === "unavailable" || !state)
       label = "Vacuum unavailable";
     this._startLabel.textContent = this._busy ? "Sending…" : label;
+    this._stop.hidden =
+      !["cleaning", "paused"].includes(state) ||
+      !(features & VACUUM_FEATURE.STOP);
+    this._stop.disabled = this._busy;
     this._dock.hidden =
       !state ||
       ["docked", "returning", "unknown", "unavailable"].includes(state) ||
@@ -603,7 +703,9 @@ export class VacuumAreasCard extends HTMLElement {
   async _perform(service) {
     if (
       this._busy ||
-      !["clean_area", "start", "pause", "return_to_base"].includes(service) ||
+      !["clean_area", "start", "pause", "stop", "return_to_base"].includes(
+        service,
+      ) ||
       (service === "clean_area" && !this._selected.size)
     )
       return;
@@ -620,18 +722,29 @@ export class VacuumAreasCard extends HTMLElement {
         service === "clean_area" ? { cleaning_area_id: ids } : {},
         { entity_id: vacuum },
       );
-      if (service === "clean_area" && this._index === index)
-        this._selected.clear();
+      if (service === "clean_area") {
+        this._jobs.set(vacuum, {
+          areas: new Set(ids),
+          requestedAt: Date.now(),
+          running: false,
+        });
+        if (this._index === index) this._selected.clear();
+      }
+      if (service === "stop" || service === "return_to_base")
+        this._jobs.delete(vacuum);
+      if (service === "start" && !resuming) this._jobs.delete(vacuum);
       this._setFeedback(
         service === "clean_area"
           ? `Cleaning ${ids.length} ${ids.length === 1 ? "room" : "rooms"} requested.`
           : service === "return_to_base"
             ? "Return to dock requested."
-            : service === "pause"
-              ? "Pause requested."
-              : resuming
-                ? "Resume requested."
-                : "Cleaning requested.",
+            : service === "stop"
+              ? "Stop requested. Choose rooms when the vacuum is idle."
+              : service === "pause"
+                ? "Pause requested."
+                : resuming
+                  ? "Resume requested."
+                  : "Cleaning requested.",
       );
     } catch (_) {
       this._setFeedback(

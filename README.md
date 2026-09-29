@@ -37,7 +37,7 @@ vacuums:
 
 `vacuums` accepts one or more entries. Each needs a vacuum `entity` and an image `map`. `name` replaces the tab label and `battery` adds a charge percentage; both are optional. A panel view gives the map the most room, but the card also adapts to narrower containers.
 
-For a dedicated full-page view, add `full_view: true` beside `type`. The card fills the panel edge to edge, with a map flush to its side and outer corners set by the Home Assistant theme. Omit it when placing the card among other cards; the embedded card and its map have square corners and map padding. Room and action buttons still follow the theme.
+For a dedicated full-page view, add `full_view: true` beside `type`. The card fills the panel edge to edge with square outer corners and a flush map. Omit it when placing the card among other cards; its outer corners then follow the Home Assistant theme, and the map has padding. Room and action buttons follow the theme in either layout.
 
 ```yaml
 type: custom:vacuum-areas-card
@@ -57,7 +57,11 @@ maintenance:
 
 The upkeep button appears only when that sensor has a positive numeric value. `navigation_path` must be a local Home Assistant path.
 
-Press **Clean all rooms** for a whole-home clean, or select rooms to change the main button to **Clean N rooms**. The card sends one `vacuum.clean_area` request containing the selected Home Assistant area IDs. While the vacuum is cleaning, the main button becomes **Pause cleaning**; when paused, it becomes **Resume cleaning**. **Dock** appears when the vacuum can return to base, and the ⋯ button beside the status opens Home Assistant's native vacuum dialog. Actions follow the vacuum's state and supported features. Changing vacuums clears the current room selection.
+Press **Clean all rooms** for a whole-home clean, or select rooms to change the main button to **Clean N rooms**. The card sends one `vacuum.clean_area` request containing the selected Home Assistant area IDs. While the vacuum is cleaning, the main button becomes **Pause**; when paused, it becomes **Resume cleaning**. **Stop** cancels the current job without sending the vacuum to the dock. Once the vacuum reports idle, choose different rooms and start a new clean. **Dock** appears when the vacuum can return to base, and the ⋯ button beside the status opens Home Assistant's native vacuum dialog. Actions follow the vacuum's state and supported features. Changing vacuums clears the current room selection.
+
+Rooms chosen through this card stay highlighted while that clean is running or paused. The Roborock vacuum entity does not report a job's target-room list, so jobs started elsewhere or viewed after a page reload have no highlighted targets.
+
+If a room lookup or map image fails, use its **Retry** button to try again.
 
 On touch screens, pinch to zoom the map and drag it while zoomed. Double tap resets it. With a keyboard, focus the map and use `+`, `-`, or `0`. Floor tabs support arrow, Home, and End keys.
 

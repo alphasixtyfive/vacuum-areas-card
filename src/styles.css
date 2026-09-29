@@ -8,10 +8,16 @@
     --ha-card-background,
     var(--card-background-color)
   );
+  --vacuum-surface-radius: var(
+    --ha-card-border-radius,
+    var(--ha-border-radius-lg, 12px)
+  );
 }
 :host([full-view]) {
   width: 100%;
   margin: 0;
+  /* HA panel views set --ha-card-border-radius to 0. */
+  --vacuum-surface-radius: var(--ha-border-radius-lg, 12px);
 }
 [hidden] {
   display: none !important;
@@ -21,13 +27,13 @@ ha-card {
   flex-direction: column;
   box-sizing: border-box;
   height: calc(100dvh - var(--header-height, 56px) - 32px);
-  border-radius: 0;
+  border-radius: var(--vacuum-surface-radius);
   overflow: hidden;
 }
 :host([full-view]) ha-card {
   height: calc(100dvh - var(--header-height, 56px));
   border: 0;
-  border-radius: var(--ha-card-border-radius, 12px);
+  border-radius: 0;
   box-shadow: none;
 }
 button {
@@ -47,8 +53,12 @@ button:focus-visible {
   gap: 4px;
   padding: 8px 16px 0;
   border-bottom: 1px solid var(--divider-color);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .tab {
+  flex: 0 0 auto;
+  max-width: min(70%, 240px);
   min-height: 44px;
   padding: 0 16px;
   border: 0;
@@ -56,6 +66,9 @@ button:focus-visible {
   background: transparent;
   color: var(--secondary-text-color);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tab[aria-selected="true"] {
   color: var(--primary-text-color);
@@ -114,9 +127,24 @@ button:focus-visible {
 .map-empty {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   color: var(--secondary-text-color);
+}
+.map-retry,
+.rooms-retry {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--divider-color);
+  border-radius: var(
+    --ha-button-border-radius,
+    var(--ha-border-radius-md, 8px)
+  );
+  background: var(--vacuum-card-background);
+  color: var(--primary-text-color);
 }
 .panel {
   min-width: 0;
@@ -187,9 +215,9 @@ button:focus-visible {
 .details {
   display: grid;
   place-items: center;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 0;
   border-radius: var(--ha-border-radius-pill, 9999px);
@@ -214,7 +242,7 @@ button:focus-visible {
   font-size: 15px;
 }
 .selection-toggle {
-  min-height: 40px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -223,7 +251,7 @@ button:focus-visible {
   border-radius: var(--ha-border-radius-pill, 9999px);
   background: transparent;
   color: var(--primary-color);
-  padding: 0 4px;
+  padding: 0 8px;
   font-size: 13px;
   white-space: nowrap;
 }
@@ -247,7 +275,7 @@ button:focus-visible {
   min-height: 60px;
   box-sizing: border-box;
   border: 1px solid var(--divider-color);
-  border-radius: var(--ha-border-radius-lg, 12px);
+  border-radius: var(--vacuum-surface-radius);
   padding: 10px 12px;
   background: transparent;
   color: var(--primary-text-color);
@@ -270,6 +298,9 @@ button:focus-visible {
     var(--primary-color) 12%,
     var(--vacuum-card-background)
   );
+}
+.room[aria-pressed="true"]:disabled {
+  opacity: 1;
 }
 .room-icon {
   display: grid;
@@ -302,6 +333,10 @@ button:focus-visible {
   display: none;
 }
 .hint {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--secondary-text-color);
   line-height: 22px;
 }
@@ -345,12 +380,14 @@ button:focus-visible {
   );
   color: var(--ha-color-on-disabled-normal, var(--secondary-text-color));
 }
+.actions .stop,
 .actions .dock {
   flex: 0 0 auto;
   border: 1px solid var(--ha-color-border-neutral-normal, var(--divider-color));
   background: transparent;
   color: var(--primary-text-color);
 }
+.actions .stop:hover:not(:disabled),
 .actions .dock:hover:not(:disabled) {
   background: var(
     --ha-color-fill-neutral-quiet-hover,
@@ -390,6 +427,16 @@ button:focus-visible {
     border-left: 0;
     border-top: 1px solid var(--divider-color);
     padding: 16px;
+  }
+  .actions {
+    flex-wrap: wrap;
+  }
+  .actions .start {
+    flex: 1 0 100%;
+  }
+  .actions .stop,
+  .actions .dock {
+    flex: 1;
   }
 }
 @container (max-width: 340px) {
