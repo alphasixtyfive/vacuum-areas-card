@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7 — 20 November 2026
+
+- Show the selected floor's rooms as soon as its mapping loads.
+- Skip panel redraws when unrelated Home Assistant entities change.
+
 ## 0.1.6 — 29 September 2026
 
 - Show a Retry button for failed room lookups or map images without retrying on every state update.

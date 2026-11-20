@@ -24,7 +24,6 @@ export class VacuumAreasCard extends HTMLElement {
     this._roomsError = false;
     this._roomKey = null;
     this._request = 0;
-    this._loading = false;
     this._busy = false;
     this.shadowRoot.innerHTML = `
         <style>${styles}</style>
@@ -231,7 +230,6 @@ export class VacuumAreasCard extends HTMLElement {
     this._roomsError = false;
     this._roomKey = null;
     this._request++;
-    this._loading = false;
     this._tabs.replaceChildren();
     config.vacuums.forEach((item, index) => {
       const tab = document.createElement("button");
@@ -266,15 +264,35 @@ export class VacuumAreasCard extends HTMLElement {
   }
 
   set hass(hass) {
-    if (this._hass?.connection !== hass?.connection) {
+    const previous = this._hass;
+    const connectionChanged = previous?.connection !== hass?.connection;
+    if (connectionChanged) {
       this._metadata = null;
       this._roomsError = false;
       this._roomKey = null;
       this._request++;
-      this._loading = false;
     }
     this._hass = hass;
-    this._render();
+    const active = this._config?.vacuums[this._index];
+    const before = previous?.states;
+    const after = hass?.states;
+    const changed = (id) => id && before?.[id] !== after?.[id];
+    if (
+      !previous ||
+      connectionChanged ||
+      (active &&
+        ([
+          active.entity,
+          active.map,
+          active.battery,
+          this._config.maintenance?.entity,
+        ].some(changed) ||
+          this._config.vacuums.some(
+            (item) => !item.name && changed(item.entity),
+          )))
+    ) {
+      this._render();
+    }
     this._loadRooms();
   }
 
@@ -306,63 +324,59 @@ export class VacuumAreasCard extends HTMLElement {
   }
 
   async _loadRooms() {
-    if (
-      !this._config ||
-      !this._hass?.callWS ||
-      this._metadata ||
-      this._loading ||
-      this._roomsError
-    )
-      return;
+    const hass = this._hass;
+    const vacuums = this._config?.vacuums;
+    if (!vacuums || !hass?.callWS || this._metadata) return;
+
     const request = ++this._request;
-    this._loading = true;
-    try {
-      const [areasResult, ...entries] = await Promise.allSettled([
-        this._hass.callWS({ type: "config/area_registry/list" }),
-        ...this._config.vacuums.map((item) =>
-          this._hass.callWS({
-            type: "config/entity_registry/get",
-            entity_id: item.entity,
-          }),
-        ),
-      ]);
-      if (request !== this._request) return;
-      if (areasResult.status === "rejected") throw areasResult.reason;
-      const areas = areasResult.value;
-      const names = new Map(
-        areas.map((area) => [
-          area.area_id,
-          { name: area.name, icon: area.icon || "mdi:home-outline" },
-        ]),
-      );
-      this._metadata = entries.map((result) =>
-        result.status === "fulfilled" && result.value
-          ? Object.keys(result.value.options?.vacuum?.area_mapping || {})
-              .filter((id) => names.has(id))
-              .map((id) => ({ id, ...names.get(id) }))
+    this._metadata = Array(vacuums.length);
+    const names = hass
+      .callWS({ type: "config/area_registry/list" })
+      .then(
+        (areas) =>
+          new Map(
+            areas.map(({ area_id, name, icon }) => [
+              area_id,
+              { name, icon: icon || "mdi:home-outline" },
+            ]),
+          ),
+      )
+      .catch(() => {
+        if (request === this._request) {
+          this._roomsError = true;
+          this._setFeedback(
+            "Rooms unavailable. Check the robot controls.",
+            true,
+          );
+          this._renderRooms();
+        }
+        return null;
+      });
+    await Promise.all(
+      vacuums.map(async ({ entity }, index) => {
+        const [areas, entry] = await Promise.all([
+          names,
+          hass
+            .callWS({ type: "config/entity_registry/get", entity_id: entity })
+            .catch(() => null),
+        ]);
+        if (request !== this._request || !areas) return;
+        this._metadata[index] = entry
+          ? Object.keys(entry.options?.vacuum?.area_mapping || {})
+              .filter((id) => areas.has(id))
+              .map((id) => ({ id, ...areas.get(id) }))
               .sort((a, b) => a.name.localeCompare(b.name))
-          : null,
-      );
-      this._roomsError = false;
-      this._setFeedback("");
-    } catch (_) {
-      if (request === this._request) {
-        this._roomsError = true;
-        this._setFeedback("Rooms unavailable. Check the robot controls.", true);
-      }
-    } finally {
-      if (request === this._request) {
-        this._loading = false;
-        this._renderRooms();
-      }
-    }
+          : null;
+        if (this._index === index) this._renderRooms();
+      }),
+    );
   }
 
   _retryRooms() {
-    if (this._loading) return;
     this._metadata = null;
     this._roomsError = false;
     this._roomKey = null;
+    this._setFeedback("");
     const reload = this._loadRooms();
     this._renderRooms();
     return reload;
@@ -565,9 +579,10 @@ export class VacuumAreasCard extends HTMLElement {
   }
 
   _renderRooms() {
-    const rooms = this._metadata?.[this._index] || [];
-    const failed = this._roomsError || this._metadata?.[this._index] === null;
-    const key = `${this._index}:${failed ? "error" : this._metadata ? "ready" : "loading"}`;
+    const mapped = this._metadata?.[this._index];
+    const rooms = mapped || [];
+    const failed = this._roomsError || mapped === null;
+    const key = `${this._index}:${failed ? "error" : mapped ? "ready" : "loading"}`;
     if (key !== this._roomKey) {
       this._roomKey = key;
       this._rooms.replaceChildren();
@@ -577,7 +592,7 @@ export class VacuumAreasCard extends HTMLElement {
         const message = document.createElement("span");
         message.textContent = failed
           ? "Rooms unavailable"
-          : this._metadata
+          : mapped
             ? "No mapped rooms"
             : "Loading rooms…";
         hint.append(message);

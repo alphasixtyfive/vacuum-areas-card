@@ -104,6 +104,7 @@ test("rooms come from the vacuum mapping and Home Assistant areas", async () => 
   const card = Object.create(Card.prototype);
   const calls = [];
   card._config = { vacuums: [{ entity: "vacuum.robot" }] };
+  card._index = 0;
   card._hass = {
     callWS: async (request) => {
       calls.push(request.type);
@@ -175,6 +176,54 @@ test("one failed vacuum mapping leaves other rooms available until retry", async
   failed = false;
   await card._retryRooms();
   assert.equal(card._metadata[0][0].name, "Kitchen");
+});
+
+test("the selected room list is shown while the other floor is still loading", async () => {
+  const card = Object.create(Card.prototype);
+  card._config = {
+    vacuums: [{ entity: "vacuum.down" }, { entity: "vacuum.up" }],
+  };
+  card._index = 0;
+  card._request = 0;
+  let completeUpstairs;
+  const entry = { options: { vacuum: { area_mapping: { kitchen: 1 } } } };
+  card._hass = {
+    callWS: async ({ type, entity_id }) => {
+      if (type === "config/area_registry/list")
+        return [{ area_id: "kitchen", name: "Kitchen" }];
+      if (entity_id === "vacuum.down") return entry;
+      return new Promise((resolve) => {
+        completeUpstairs = resolve;
+      });
+    },
+  };
+  const renders = [];
+  card._renderRooms = () => renders.push(card._metadata[card._index]);
+  const loading = card._loadRooms();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(renders[0][0].name, "Kitchen");
+  assert.equal(card._metadata[1], undefined);
+  completeUpstairs(entry);
+  await loading;
+  assert.equal(renders.length, 1);
+  assert.equal(card._metadata[1][0].name, "Kitchen");
+});
+
+test("unrelated state changes leave the vacuum panel alone", () => {
+  const card = Object.create(Card.prototype);
+  card._config = { vacuums: [{ entity: "vacuum.robot", map: "image.robot" }] };
+  card._index = 0;
+  card._loadRooms = () => {};
+  let renders = 0;
+  card._render = () => renders++;
+  const robot = { state: "docked" };
+  card.hass = { states: { "vacuum.robot": robot } };
+  card.hass = {
+    states: { "vacuum.robot": robot, "sensor.clock": { state: "1" } },
+  };
+  assert.equal(renders, 1);
+  card.hass = { states: { "vacuum.robot": { state: "cleaning" } } };
+  assert.equal(renders, 2);
 });
 
 test("failed area lookup waits for an explicit retry", async () => {
